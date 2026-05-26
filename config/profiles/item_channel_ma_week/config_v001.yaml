@@ -1,0 +1,210 @@
+# =============================================================================
+# Unified config: item_channel_ma_week / v001
+# =============================================================================
+# 包含本次运行所需的全部参数，加载时与 config/system/scenario_defaults.yaml 合并：
+#   - output.*      → 覆盖 scenario_defaults 中的默认输出路径
+#   - source.*      → 注入各场景的数据来源
+#   - bq_tables.*   → BQ 输出表名（仅 bq_gcp_bq 场景使用）
+#   - runtime.*     → 业务参数（实体粒度、特征、时间窗等）
+#   - model.*       → 模型超参
+# =============================================================================
+
+versioning:
+  model_line: item_channel_ma_week
+  version: v001
+
+# ── 输出路径覆盖（可选，不填则使用 scenario_defaults 的系统默认）────────────
+output:
+  local_output_dir: 'C:\Users\arche24\KnowledgeBase\model_predict_by_weekly\20_modeling\bq_local_runs'
+  # gcs_output_uri: 'gs://custom/bucket'   # 如需覆盖 GCS 默认路径，取消注释
+
+# ── 数据来源（按场景）────────────────────────────────────────────────────────
+source:
+  bq_local_local:
+    source_table: "ingka-cn-cop-stage.ikea_da_temp.temp_ir_sales_feature_all_with_order_level_discount_enriched"
+    source_filters:
+      sales_category: "热销商品"
+      # sales_channel: ""     # 空字符串 = 不限制，保留为模板
+  bq_gcp_bq:
+    source_table: "ingka-cn-cop-stage.ikea_da_temp.temp_ir_sales_feature_all_with_order_level_discount_enriched"
+    source_filters:
+      sales_category: "热销商品"
+  gcs_gcp_gcs:
+    source_csv_uri: ""   # 填入 runners/export_source_data_to_gcs.py 输出的 GCS URI
+  local_local_local:
+    source_csv_local_path: ""   # 填入本地 CSV 路径
+
+# ── BQ 输出表名（仅 bq_gcp_bq 场景写回 BigQuery 时使用）──────────────────────
+bq_tables:
+  bq_pred_table: "ingka-cn-cop-stage.ikea_da_test.dt_pred_train_test_detail"
+  bq_model_meta_table: "ingka-cn-cop-stage.ikea_da_test.dt_model_metadata"
+  bq_feat_imp_table: "ingka-cn-cop-stage.ikea_da_test.dt_feature_importance_detail"
+  bq_metrics_by_split_table: "ingka-cn-cop-stage.ikea_da_test.dt_metrics_by_split"
+  bq_run_eval_metrics_table: "ingka-cn-cop-stage.ikea_da_test.dt_run_eval_metrics"
+
+# ── 业务运行参数 ──────────────────────────────────────────────────────────────
+runtime:
+  label_column: item_qty
+  time_column: week_no
+  min_train_rows: 95
+
+  sample_key_columns:
+    - item_no
+    - sales_channel
+    - market_area_no
+    - week_no
+
+  entity_id_columns:
+    - sales_channel
+    - hfb_no
+
+  model_name_columns:
+    - sales_channel
+    - hfb_no
+
+  entity_discovery:
+    enabled: true
+
+  time_windows:
+    train_start: "202401"
+    train_end: "202552"
+    test_start: "202601"
+    test_end: "202617"
+
+  in_sample_validation:
+    enabled: true
+    validation_ratio: 0.2
+    split_mode: random
+    random_seed: 42
+
+  tuning:
+    enabled: true
+    method: random
+    n_iter: 20
+    random_seed: 42
+    internal_validation_ratio: 0.2
+    internal_split_mode: random
+    objective:
+      primary: mae_min
+      secondary: accuracy_strict_nonzero_max
+      mae_tie_tolerance: 1.0e-9
+    search_space:
+      max_depth: [4, 5, 6, 8, 10, 12, null]
+      min_samples_split: [8, 12, 16, 24, 32]
+      min_samples_leaf: [4, 8, 12, 16]
+      max_features: ["sqrt", "log2", null]
+
+  evaluation:
+    requested_dimensions: []
+    include_total: true
+    include_entity: true
+    split_name_map:
+      train: train
+      validation: validation
+      test: test
+
+  features:
+    - pa_no
+    - r4w_avg_qty
+    - r4w_median_qty
+    - r12w_avg_qty
+    - r12w_median_qty
+    - r4w_weighted_qty
+    - r12w_weighted_qty
+    - last_year_qty
+    - ly_r5w_avg_qty
+    - has_holiday
+    - is_special_holiday
+    - holiday_overlap_days
+    - dayoff_overlap_days
+    - sunny_days
+    - sunny_workdays
+    - sunny_dayoff_days
+    - sunny_holiday_days
+    - un_sunny_days
+    - un_sunny_workdays
+    - un_sunny_dayoff_days
+    - un_sunny_holiday_days
+    - week_tavg
+    - workdays_tavg
+    - dayoff_tavg
+    - holiday_tavg
+    - week_tmin
+    - workdays_tmin
+    - dayoff_tmin
+    - holiday_tmin
+    - week_tmax
+    - workdays_tmax
+    - dayoff_tmax
+    - holiday_tmax
+    - workday_discount_ratio
+    - dayoff_discount_ratio
+    - holiday_discount_ratio
+    - week_avg_discount_sale_price_incl_tax
+    - week_max_discount_sale_price_incl_tax
+    - week_min_discount_sale_price_incl_tax
+    - week_avg_discount_ratio
+    - week_min_discount_ratio
+    - week_max_discount_ratio
+    - rolling_4w_min_price
+    - r4w_price_vs_discount_price
+    - has_scin
+    - scin_workday_overlap_days
+    - scin_dayoff_overlap_days
+    - scin_holiday_overlap_days
+    - is_order_manjian
+    - is_order_manzhe
+    - is_item_combo
+    - order_manjian_days
+    - order_manzhe_days
+    - item_combo_days
+    - is_order_manjian_holiday
+    - is_order_manzhe_holiday
+    - is_item_combo_holiday
+    - order_manjian_holiday_days
+    - order_manzhe_holiday_days
+    - item_combo_holiday_days
+    - is_order_manjian_dayoff
+    - is_order_manzhe_dayoff
+    - is_item_combo_dayoff
+    - order_manjian_dayoff_days
+    - order_manzhe_dayoff_days
+    - item_combo_dayoff_days
+    - is_order_manjian_workdays
+    - is_order_manzhe_workdays
+    - is_item_combo_workdays
+    - order_manjian_workdays_days
+    - order_manzhe_workdays_days
+    - item_combo_workdays_days
+    - delivery_type
+
+# ── 模型超参 ──────────────────────────────────────────────────────────────────
+model:
+  active: decision_tree
+
+  decision_tree:
+    algorithm_name: "DT"
+    version: "v001"
+    max_depth: 6
+    min_samples_split: 24
+    min_samples_leaf: 12
+    max_features: "sqrt"
+    random_state: 42
+    description: "Decision Tree baseline for sales_channel x hfb_no x week_no"
+
+  lightgbm:
+    algorithm_name: "LGBM"
+    version: "v001"
+    num_leaves: 31
+    max_depth: 6
+    learning_rate: 0.05
+    n_estimators: 200
+    min_data_in_leaf: 12
+    reg_alpha: 0.1
+    reg_lambda: 0.1
+    feature_fraction: 0.8
+    bagging_fraction: 0.8
+    bagging_freq: 5
+    random_state: 42
+    verbose: -1
+    description: "LightGBM baseline for sales_channel x hfb_no x week_no"

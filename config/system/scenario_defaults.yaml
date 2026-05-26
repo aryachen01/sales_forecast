@@ -1,0 +1,85 @@
+# =============================================================================
+# System-level scenario defaults
+# =============================================================================
+# 平台层配置，由平台维护，用户通常不需要修改本文件。
+#
+# 本文件定义：
+#   - 各场景的 source_mode（数据读取方式）
+#   - 各场景的默认输出路径
+#   - 各场景的存储开关（store_*_to_bq / store_*_to_gcs）
+#
+# 用户可在自己的 config_vXXX.yaml 中覆盖以下内容：
+#   - output.local_output_dir   → 覆盖 bq_local_local / local_local_local 的本地输出路径
+#   - output.gcs_output_uri     → 覆盖 bq_gcp_bq / gcs_gcp_gcs 的 GCS 输出路径
+#   - source.<scenario>         → 注入各场景的数据来源（source_table / source_csv_uri 等）
+# =============================================================================
+
+scenario_profiles:
+
+  # ── BQ 读 + 本地执行 + 本地存（日常调试/实验推荐）──────────────────────────
+  bq_local_local:
+    source_mode: bq
+    # source_table 和 source_filters 由用户 config 的 source.bq_local_local 提供
+    storage:
+      local_output_dir: '/tmp/gcp_python_modeling/outputs'   # 用户 output.local_output_dir 会覆盖此处
+      gcs_sync_local_outputs: false
+      store_pred_to_bq: false
+      store_model_meta_to_bq: false
+      store_feat_imp_to_bq: false
+      store_metrics_by_split_to_bq: false
+      store_run_eval_metrics_to_bq: false
+      store_pred_to_gcs: false
+      store_model_meta_to_gcs: false
+      store_feat_imp_to_gcs: false
+      store_model_to_gcs: false
+
+  # ── BQ 读 + GCP 执行 + GCS + BQ 存（生产写回）────────────────────────────
+  bq_gcp_bq:
+    source_mode: bq
+    # source_table 和 source_filters 由用户 config 的 source.bq_gcp_bq 提供
+    storage:
+      local_output_dir: '/tmp/gcp_python_modeling/outputs'   # 用户 output.local_output_dir 会覆盖此处（Cloud Run 可用 /tmp）
+      gcs_output_uri: 'gs://ocp_model_archive/gcp_python_modeling'   # 用户 output.gcs_output_uri 会覆盖此处
+      gcs_sync_local_outputs: true
+      store_pred_to_bq: true
+      store_model_meta_to_bq: true
+      store_feat_imp_to_bq: true
+      store_metrics_by_split_to_bq: true
+      store_run_eval_metrics_to_bq: true
+      store_pred_to_gcs: false
+      store_model_meta_to_gcs: false
+      store_feat_imp_to_gcs: false
+      store_model_to_gcs: true
+
+  # ── GCS CSV 读 + GCP 执行 + GCS 存（离线导出后上云运行）──────────────────
+  gcs_gcp_gcs:
+    source_mode: csv
+    # source_csv_uri 由用户 config 的 source.gcs_gcp_gcs.source_csv_uri 提供
+    storage:
+      gcs_output_uri: 'gs://ocp_model_archive/gcp_python_modeling'   # 用户 output.gcs_output_uri 会覆盖此处
+      store_pred_to_bq: false
+      store_model_meta_to_bq: false
+      store_feat_imp_to_bq: false
+      store_metrics_by_split_to_bq: false
+      store_run_eval_metrics_to_bq: false
+      store_pred_to_gcs: false
+      store_model_meta_to_gcs: true
+      store_feat_imp_to_gcs: true
+      store_model_to_gcs: true
+
+  # ── 本地 CSV 读 + 本地执行 + 本地存（纯本地测试）────────────────────────
+  local_local_local:
+    source_mode: csv
+    # source_csv_local_path 由用户 config 的 source.local_local_local.source_csv_local_path 提供
+    storage:
+      local_output_dir: '/tmp/gcp_python_modeling/outputs'   # 用户 output.local_output_dir 会覆盖此处
+      gcs_sync_local_outputs: false
+      store_pred_to_bq: false
+      store_model_meta_to_bq: false
+      store_feat_imp_to_bq: false
+      store_metrics_by_split_to_bq: false
+      store_run_eval_metrics_to_bq: false
+      store_pred_to_gcs: false
+      store_model_meta_to_gcs: false
+      store_feat_imp_to_gcs: false
+      store_model_to_gcs: false

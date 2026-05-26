@@ -1,0 +1,120 @@
+# =============================================================================
+# Config: item_day / local_local_local / DT / Korea 测试数据
+# 创建日期: 2026-05-26
+# 用途: 使用本地 Korea 测试 CSV 在本地执行 Decision Tree 建模验证
+# 场景: local_local_local（本地 CSV → 本地执行 → 本地落盘）
+# =============================================================================
+
+versioning:
+  model_line: item_day
+  version: kr_test_20260526
+
+# ── 输出路径覆盖 ──────────────────────────────────────────────────────────────
+output:
+  local_output_dir: 'C:\Users\arche24\KnowledgeBase\model_predict_by_weekly\20_modeling\bq_local_runs'
+
+# ── 数据来源 ──────────────────────────────────────────────────────────────────
+source:
+  local_local_local:
+    source_csv_local_path: 'C:\Users\arche24\KnowledgeBase\model_predict_by_weekly\20_modeling\cff_korea_forecast_20260521_test_kr_sales_forecast_20260521_test_data.csv'
+
+# ── BQ 输出表名（本场景不写 BQ，保留为模板）────────────────────────────────────
+bq_tables:
+  bq_pred_table: "ingka-cn-cop-stage.ikea_da_test.dt_pred_train_test_detail"
+  bq_model_meta_table: "ingka-cn-cop-stage.ikea_da_test.dt_model_metadata"
+  bq_feat_imp_table: "ingka-cn-cop-stage.ikea_da_test.dt_feature_importance_detail"
+
+# ── 业务运行参数 ──────────────────────────────────────────────────────────────
+runtime:
+  label_column: item_qty
+  time_column: day_date
+  min_train_rows: 95
+
+  sample_key_columns:
+    - item_no
+    - day_date
+
+  entity_id_columns:
+    - item_no
+
+  model_name_columns:
+    - item_no
+
+  entity_discovery:
+    enabled: true
+
+  time_windows:
+    train_start: "2024-01-01"
+    train_end: "2025-12-31"
+    test_start: "2026-01-01"
+    test_end: "2026-04-30"
+
+  in_sample_validation:
+    enabled: true
+    validation_ratio: 0.2
+    split_mode: random
+    random_seed: 42
+
+  tuning:
+    enabled: true
+    method: random
+    n_iter: 20
+    random_seed: 42
+    internal_validation_ratio: 0.2
+    internal_split_mode: random
+    objective:
+      primary: mae_min
+      secondary: accuracy_strict_nonzero_max
+      mae_tie_tolerance: 1.0e-9
+    search_space: {}   # 使用代码内置默认搜索空间
+
+  evaluation:
+    requested_dimensions: []
+    include_total: true
+    include_entity: true
+    split_name_map:
+      train: train
+      validation: validation
+      test: test
+
+  features:
+    - lag_qty_7
+    - lag_qty_14
+    - lag_qty_28
+    - rolling_std_14
+    - rolling_std_28
+    - nonzero_rate_28
+    - nonzero_days_7
+    - is_workday
+    - is_holiday
+    - is_dayoff
+    - is_holiday_special
+    - is_service_discount
+    - is_order_manjian
+    - is_order_manzhe
+    - is_item_combo
+    - is_camp_start_week
+    - is_camp_end_week
+    - is_in_scin
+    - discount_ratio
+    - discount_ratio_recode
+    - same_wd_median_4
+    - same_wd_median_8
+    - same_wd_median_13
+    - is_sunny
+    - tavg
+    - day_name_long
+    - holiday_name   # 若 CSV 中缺失该列，会被自动跳过
+
+# ── 模型超参 ──────────────────────────────────────────────────────────────────
+model:
+  active: decision_tree
+
+  decision_tree:
+    algorithm_name: "DT"
+    version: "v001"
+    max_depth: 5
+    min_samples_split: 24
+    min_samples_leaf: 12
+    max_features: "sqrt"
+    random_state: 42
