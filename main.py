@@ -260,6 +260,54 @@ def _append_run_registry_csv(*, output_root: Path, row: Dict[str, Any]) -> Path:
     return registry_path
 
 
+def _load_resume_checkpoint(
+    *,
+    output_root: Path,
+    resume_run_id: str,
+    algorithm_name: str,
+) -> Dict[str, Any]:
+    """定位已中断的 run 目录并读取 checkpoint 文件，返回续跑所需信息。"""
+    runs_dir = output_root / "runs"
+    if not runs_dir.exists():
+        raise FileNotFoundError(f"Runs directory not found: {runs_dir}")
+    matching = [
+        d for d in runs_dir.iterdir()
+        if d.is_dir() and d.name.startswith(f"{resume_run_id}__")
+    ]
+    if not matching:
+        raise FileNotFoundError(
+            f"No run directory found for run_id={resume_run_id} under {runs_dir}. "
+            f"Ensure the original run used the same output_root."
+        )
+    if len(matching) > 1:
+        raise ValueError(
+            f"Multiple run directories match run_id={resume_run_id}: {[d.name for d in matching]}"
+        )
+    out_dir = matching[0]
+    checkpoint_path = out_dir / f"{algorithm_name.lower()}_checkpoint_{resume_run_id}.json"
+    if not checkpoint_path.exists():
+        raise FileNotFoundError(
+            f"Checkpoint file not found: {checkpoint_path}\n"
+            f"The original run may not have been started with checkpoint support. "
+            f"Cannot resume run_id={resume_run_id}."
+        )
+    data = json.loads(checkpoint_path.read_text(encoding="utf-8"))
+    completed_keys: set = set(data.get("completed_entity_keys", []))
+    resume_results: List = data.get("results", [])
+    print(
+        f"[RESUME] Checkpoint loaded: {checkpoint_path}",
+        flush=True,
+    )
+    return {
+        "out_dir": out_dir,
+        "checkpoint_path": checkpoint_path,
+        "completed_entity_keys": completed_keys,
+        "resume_results": resume_results,
+        "completed_count": data.get("completed_count", len(completed_keys)),
+        "total_entities": data.get("total_entities", 0),
+    }
+
+
 def _require_runtime_field(config: Dict, key: str):
     if key not in config:
         raise ValueError(f"runtime config missing required field: '{key}'")
@@ -777,6 +825,7 @@ def main() -> None:
     global MODEL_PARAMS
     global SOURCE_REF
     global OUT_DIR
+    global RUN_TS
 
     # 端到端建模流程总览：
     # (1) 特征宽表读取：来源可为 BigQuery 源表或 CSV。
@@ -795,6 +844,15 @@ def main() -> None:
         type=int,
         default=None,
         help="Limit number of entities for quick tests",
+    )
+    parser.add_argument(
+        "--resume-run-id",
+        type=str,
+        default=None,
+        help=(
+            "Resume an interrupted run. Provide the original run_id (e.g. 20260526_125855_400) "
+            "to skip already-completed entities and continue from the checkpoint."
+        ),
     )
     parser.add_argument(
         "--scenario",
@@ -917,22 +975,47 @@ def main() -> None:
     if not isinstance(versioning_meta, dict):
         versioning_meta = {}
     model_line = str(versioning_meta.get("model_line", "")).strip()
-    run_tag = _build_run_tag(RUN_TS, model_line, model_key_normalized)
-
     output_root = _resolve_output_dir(scenario_profile)
-    OUT_DIR = output_root / "runs" / run_tag
-    OUT_DIR.mkdir(parents=True, exist_ok=True)
 
-    config_snapshot_info = _write_config_snapshot(
-        out_dir=OUT_DIR,
-        run_ts=RUN_TS,
-        config_path=_resolve_config_input_path(config_file, "config/profiles/item_channel_ma_week/config_v001.yaml"),
-        system_defaults_path=_resolve_config_input_path(
-            "config/system/scenario_defaults.yaml",
-            "config/system/scenario_defaults.yaml",
-        ),
-        versioning_meta=versioning_meta,
-    )
+    # ── 断点续跑：若指定 --resume-run-id，从 checkpoint 恢复 ──────────────────────
+    _resume_results: Optional[List] = None
+    _completed_entity_keys: Optional[set] = None
+    _checkpoint_path: Optional[Path] = None
+
+    if args.resume_run_id:
+        _resume_info = _load_resume_checkpoint(
+            output_root=output_root,
+            resume_run_id=args.resume_run_id,
+            algorithm_name=algorithm_name,
+        )
+        RUN_TS = args.resume_run_id
+        OUT_DIR = _resume_info["out_dir"]
+        run_tag = OUT_DIR.name
+        _checkpoint_path = _resume_info["checkpoint_path"]
+        _resume_results = _resume_info["resume_results"]
+        _completed_entity_keys = _resume_info["completed_entity_keys"]
+        print(
+            f"[RESUME] Resuming run_id={RUN_TS}, "
+            f"completed={_resume_info['completed_count']}/{_resume_info['total_entities']} entities",
+            flush=True,
+        )
+        config_snapshot_info: Dict[str, Any] = {"config_sha256": "", "system_defaults_sha256": ""}
+    else:
+        run_tag = _build_run_tag(RUN_TS, model_line, model_key_normalized)
+        OUT_DIR = output_root / "runs" / run_tag
+        OUT_DIR.mkdir(parents=True, exist_ok=True)
+        _checkpoint_path = OUT_DIR / f"{algorithm_name.lower()}_checkpoint_{RUN_TS}.json"
+        config_snapshot_info = _write_config_snapshot(
+            out_dir=OUT_DIR,
+            run_ts=RUN_TS,
+            config_path=_resolve_config_input_path(config_file, "config/profiles/item_channel_ma_week/config_v001.yaml"),
+            system_defaults_path=_resolve_config_input_path(
+                "config/system/scenario_defaults.yaml",
+                "config/system/scenario_defaults.yaml",
+            ),
+            versioning_meta=versioning_meta,
+        )
+    # ─────────────────────────────────────────────────────────────────────────────
 
     requested_bq_pred_table = str(table_defaults.get("bq_pred_table", "")).strip()
     requested_bq_model_meta_table = str(table_defaults.get("bq_model_meta_table", "")).strip()
@@ -1087,7 +1170,7 @@ def main() -> None:
     if not feature_cols:
         raise RuntimeError("No available features found in source table.")
 
-    resolved_tables: Dict[str, str] = {"pred": "", "model_meta": "", "feat_imp": ""}
+    resolved_tables: Dict[str, str] = {"pred": "", "model_meta": "", "feat_imp": "", "metrics_by_split": "", "run_eval_metrics": ""}
     # 仅对启用 BQ 写入的目标表执行解析，避免无权限场景触发无意义的 BQ API 调用。
     for key, spec in TABLE_SPECS.items():
         requested = requested_tables.get(key, "")
@@ -1151,6 +1234,9 @@ def main() -> None:
         split_label_map=split_label_map,
         tuning_config=tuning_cfg,
         config_name=cfg_name,
+        checkpoint_path=_checkpoint_path,
+        resume_results=_resume_results,
+        completed_entity_keys=_completed_entity_keys,
     )
     # (4) 模型效果评估报告：主报告始终生成；baseline 仅在条件满足时附加。
     report_info = generate_same_structure_report(

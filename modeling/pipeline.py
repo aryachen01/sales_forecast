@@ -11,7 +11,8 @@ import json
 import re
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, List, Optional, cast
+from datetime import datetime
+from typing import Any, Dict, List, Optional, Set, cast
 
 import pandas as pd
 from google.cloud import bigquery
@@ -65,6 +66,27 @@ def _build_estimator(algorithm_key: str, params: Dict[str, Any]):
     raise ValueError(f"Unsupported algorithm key: {algorithm_key}")
 
 
+def _write_checkpoint(
+    checkpoint_path: Path,
+    run_id: str,
+    run_tag: str,
+    results: List[Dict],
+    total_entities: int,
+) -> None:
+    """每个 entity 完成后立即写入 checkpoint，支持断点续跑。"""
+    completed_keys = [r["entity_id_json"] for r in results]
+    payload = {
+        "run_id": run_id,
+        "run_tag": run_tag,
+        "last_updated": datetime.now().isoformat(timespec="seconds"),
+        "completed_count": len(completed_keys),
+        "total_entities": total_entities,
+        "completed_entity_keys": completed_keys,
+        "results": results,
+    }
+    checkpoint_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+
+
 def train_and_save_predictions(
     client: Optional[bigquery.Client],
     runtime: PipelineRuntimeContext,
@@ -103,9 +125,13 @@ def train_and_save_predictions(
     split_label_map: Optional[Dict[str, str]] = None,
     tuning_config: Optional[TuningConfig] = None,
     config_name: str = "config/model_params.yaml",
+    checkpoint_path: Optional[Path] = None,
+    resume_results: Optional[List[Dict]] = None,
+    completed_entity_keys: Optional[Set[str]] = None,
 ) -> Dict:
     """按 entity（entity_id_columns 定义的维度组合）执行建模流程，并持久化产物与 BQ 输出。"""
-    results = []
+    results: List[Dict] = list(resume_results) if resume_results else []
+    _completed_keys: Set[str] = set(completed_entity_keys) if completed_entity_keys else set()
     model_meta_rows = []
     bq_pred_written_rows_total = 0
     bq_feat_imp_written_rows_total = 0
@@ -139,6 +165,9 @@ def train_and_save_predictions(
 
     for idx, entity_filter in enumerate(entities, 1):
         entity_id_json = json.dumps(entity_filter, ensure_ascii=True)
+        if entity_id_json in _completed_keys:
+            print(f"[RESUME] Skipping completed entity ({idx}/{len(entities)}): {entity_id_json}", flush=True)
+            continue
         print(f"[{runtime.algorithm_name}] {idx}/{len(entities)} entity={entity_id_json}", flush=True)
         try:
             if source_df is not None:
@@ -191,6 +220,8 @@ def train_and_save_predictions(
                         "test_rows": 0,
                     }
                 )
+                if checkpoint_path is not None:
+                    _write_checkpoint(checkpoint_path, runtime.run_ts, runtime.run_tag, results, len(entities))
                 continue
             if len(df_train) < min_train_rows or len(df_test) < 10:
                 raise RuntimeError(
@@ -482,6 +513,8 @@ def train_and_save_predictions(
                     "effective_params_json_local": str(_eff_params_json_path),
                 }
             )
+            if checkpoint_path is not None:
+                _write_checkpoint(checkpoint_path, runtime.run_ts, runtime.run_tag, results, len(entities))
         except Exception as exc:
             err_msg = f"Entity processing failed: {entity_id_json}; reason={exc}"
             print(f"[ERROR] {err_msg}", flush=True)
@@ -497,6 +530,8 @@ def train_and_save_predictions(
                     "error": str(exc),
                 }
             )
+            if checkpoint_path is not None:
+                _write_checkpoint(checkpoint_path, runtime.run_ts, runtime.run_tag, results, len(entities))
             continue
 
     if store_pred_to_bq and bq_pred_table.strip():

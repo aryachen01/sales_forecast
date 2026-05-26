@@ -42,7 +42,7 @@
 | `prediction_builders.py` | 预测结果与特征重要性 DataFrame 构建 | `build_prediction_dataframes`, `build_feature_importance_df` |
 | `evaluation.py` | 指标计算与评估产物（JSON/CSV）落盘 | `evaluate_and_save_outputs` |
 | `artifacts.py` | 模型文件、模型元数据、预测明细、特征重要性产物落盘与可选 GCS 上传 | `save_model_and_metadata`, `save_predictions_csv`, `save_feature_importance_csv` |
-| `writers.py` | BigQuery 追加写入适配层 | `append_train_test_predictions_to_bq`, `append_model_metadata_to_bq`, `append_feature_importance_to_bq` |
+| `writers.py` | BigQuery 追加写入适配层，5 个写入函数均已实现；其中 3 张表（pred / model_meta / feat_imp）已在 BQ 中有物理表，2 张表（metrics_by_split / run_eval_metrics）函数已就绪但尚未在 `bq_gcp_bq` 场景下运行，首次运行后将自动建表 | `append_train_test_predictions_to_bq`, `append_model_metadata_to_bq`, `append_feature_importance_to_bq`, `append_metrics_by_split_to_bq`, `append_run_eval_metrics_to_bq` |
 | `tuning.py` | 统一调参框架，支持 Random Search / Grid Search，按 entity 选出最优超参数 | `run_tuning_for_entity` |
 | `batch_reporting.py` | 评估汇总与报表输出，计算 MAE/RMSE/MAPE/WAPE/sMAPE 及准确率标志位，生成分层聚合报告 | `compute_flags`, `compute_metrics`, `generate_same_structure_report` |
 | `__init__.py` | 对外导出 modeling 公共 API | `PipelineRuntimeContext`, `train_and_save_predictions` 等 |
@@ -336,6 +336,16 @@ scenario_profiles:
 4. 读取源数据 / 识别可用特征列
 5. 解析 entity 列表（手工清单或自动 discovery）
 6. 解析 BQ 输出表（`resolve_bq_table`）
+
+   当前 5 张输出表的 BQ 同步状态（仅 `bq_gcp_bq` 场景写入）：
+
+   | 表名 | store 开关 | 写入函数 | 物理表状态 |
+   |---|---|---|---|
+   | `dt_pred_train_test_detail` | `store_pred_to_bq` | `append_train_test_predictions_to_bq` | ✅ 已存在 |
+   | `dt_model_metadata` | `store_model_meta_to_bq` | `append_model_metadata_to_bq` | ✅ 已存在 |
+   | `dt_feature_importance_detail` | `store_feat_imp_to_bq` | `append_feature_importance_to_bq` | ✅ 已存在 |
+   | `dt_metrics_by_split` | `store_metrics_by_split_to_bq` | `append_metrics_by_split_to_bq` | ⏳ 待首次 bq_gcp_bq 运行后自动建表 |
+   | `dt_run_eval_metrics` | `store_run_eval_metrics_to_bq` | `append_run_eval_metrics_to_bq` | ⏳ 待首次 bq_gcp_bq 运行后自动建表 |
 7. 构建 `PipelineRuntimeContext`，调用 `train_and_save_predictions`
 8. 调用 `generate_same_structure_report` 生成评估报告
 9. 写 run_registry.csv、保存 run_summary.json

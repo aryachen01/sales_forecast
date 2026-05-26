@@ -14,6 +14,7 @@
 | 超参调优 | 支持随机搜索 / 网格搜索，目标优先级可配置 |
 | 多维评估 | MAE / RMSE / WAPE / 准确率口径，支持基线对标 |
 | 产物管理 | 本地落盘 + 可选 GCS 归档 + 可选 BigQuery 写入 |
+| 断点续跑 | 每个 entity 训练后自动写 checkpoint；支持 `--resume-run-id` 从中断处继续，跳过已完成实体 |
 
 ---
 
@@ -48,7 +49,7 @@ flowchart TD
 | 7 | 将预测结果和特征重要性组装为 DataFrame | `modeling/prediction_builders.py` |
 | 8 | 将模型 .pkl、预测 CSV、元数据 JSON 写入本地；按开关上传 GCS | `modeling/artifacts.py` |
 | 9 | 计算 MAE / RMSE / WAPE / 准确率，输出评估 CSV | `modeling/evaluation.py` + `modeling/batch_reporting.py` |
-| 10 | 按开关将预测明细 / 模型元数据 / 特征重要性追加写入 BigQuery | `modeling/writers.py` |
+| 10 | 按开关将 5 张表追加写入 BigQuery（`bq_gcp_bq` 场景）：预测明细、模型元数据、特征重要性已有物理表；实体级指标（`dt_metrics_by_split`）与 run 级指标（`dt_run_eval_metrics`）函数已实现，首次运行时自动建表 | `modeling/writers.py` |
 
 ---
 
@@ -61,6 +62,12 @@ flowchart TD
 ```powershell
 cd scripts/gcp_python_modeling
 python main.py --scenario bq_local_local --config config/profiles/item_channel_ma_week/config_v001.yaml --max-entities 3
+```
+
+**断点续跑（替换为实际 run_id）：**
+
+```powershell
+python main.py --scenario bq_local_local --config config/profiles/item_channel_ma_week/config_v001.yaml --max-entities 3 --resume-run-id 20260526_140425_940
 ```
 
 ---
