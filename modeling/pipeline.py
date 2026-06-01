@@ -19,6 +19,7 @@ from google.cloud import bigquery
 from sklearn.tree import DecisionTreeRegressor
 
 from common.data_source import fetch_data_from_bq, fetch_data_from_dataframe
+from common.gcs_artifact_manager import upload_file_to_gcs_uri
 from modeling.artifacts import (
     save_feature_importance_csv,
     save_model_and_metadata,
@@ -73,8 +74,11 @@ def _write_checkpoint(
     run_tag: str,
     results: List[Dict],
     total_entities: int,
+    *,
+    gcs_output_uri: str = "",
+    project_id: str = "",
 ) -> None:
-    """每个 entity 完成后立即写入 checkpoint，支持断点续跑。"""
+    """每个 entity 完成后立即写入 checkpoint，支持断点续跑（含 GCS 同步）。"""
     completed_keys = [r["entity_id_json"] for r in results]
     payload = {
         "run_id": run_id,
@@ -86,6 +90,13 @@ def _write_checkpoint(
         "results": results,
     }
     checkpoint_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+    # Cloud Run 续跑支持：把 checkpoint 同步到 GCS，下次启动时可从 GCS 恢复
+    if gcs_output_uri and project_id:
+        try:
+            gcs_uri = f"{gcs_output_uri.rstrip('/')}/checkpoints/{checkpoint_path.name}"
+            upload_file_to_gcs_uri(checkpoint_path, gcs_uri, project_id)
+        except Exception as _exc:
+            print(f"[WARN] GCS checkpoint sync failed (local copy intact): {_exc}", flush=True)
 
 
 def train_and_save_predictions(
@@ -222,7 +233,8 @@ def train_and_save_predictions(
                     }
                 )
                 if checkpoint_path is not None:
-                    _write_checkpoint(checkpoint_path, runtime.run_ts, runtime.run_tag, results, len(entities))
+                    _write_checkpoint(checkpoint_path, runtime.run_ts, runtime.run_tag, results, len(entities),
+                                      gcs_output_uri=runtime.gcs_output_uri, project_id=runtime.project_id)
                 continue
             if len(df_train) < min_train_rows or len(df_test) < 10:
                 raise RuntimeError(
@@ -525,7 +537,8 @@ def train_and_save_predictions(
                 }
             )
             if checkpoint_path is not None:
-                _write_checkpoint(checkpoint_path, runtime.run_ts, runtime.run_tag, results, len(entities))
+                _write_checkpoint(checkpoint_path, runtime.run_ts, runtime.run_tag, results, len(entities),
+                                  gcs_output_uri=runtime.gcs_output_uri, project_id=runtime.project_id)
         except Exception as exc:
             err_msg = f"Entity processing failed: {entity_id_json}; reason={exc}"
             print(f"[ERROR] {err_msg}", flush=True)
@@ -542,7 +555,8 @@ def train_and_save_predictions(
                 }
             )
             if checkpoint_path is not None:
-                _write_checkpoint(checkpoint_path, runtime.run_ts, runtime.run_tag, results, len(entities))
+                _write_checkpoint(checkpoint_path, runtime.run_ts, runtime.run_tag, results, len(entities),
+                                  gcs_output_uri=runtime.gcs_output_uri, project_id=runtime.project_id)
             continue
 
     if store_pred_to_bq and bq_pred_table.strip():

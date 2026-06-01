@@ -26,6 +26,7 @@ from common.config_loader import (
 )
 from common.bq_table_manager import TableSpec, build_bq_schema, resolve_bq_table
 from common.gcs_artifact_manager import (
+    download_file_from_gcs_uri,
     to_gcs_uri_for_local_file,
     upload_dir_to_gcs,
     upload_file_to_gcs_by_model,
@@ -265,27 +266,63 @@ def _load_resume_checkpoint(
     output_root: Path,
     resume_run_id: str,
     algorithm_name: str,
+    gcs_output_uri: str = "",
+    project_id: str = "",
 ) -> Dict[str, Any]:
-    """定位已中断的 run 目录并读取 checkpoint 文件，返回续跑所需信息。"""
+    """定位已中断的 run 目录并读取 checkpoint 文件，返回续跑所需信息。
+
+    Cloud Run 场景下本地目录为空时，自动从 GCS 下载 checkpoint（若 gcs_output_uri 已配置）。
+    """
     runs_dir = output_root / "runs"
-    if not runs_dir.exists():
-        raise FileNotFoundError(f"Runs directory not found: {runs_dir}")
-    matching = [
-        d for d in runs_dir.iterdir()
-        if d.is_dir() and d.name.startswith(f"{resume_run_id}__")
-    ]
-    if not matching:
+    out_dir: Optional[Path] = None
+
+    if runs_dir.exists():
+        matching = [
+            d for d in runs_dir.iterdir()
+            if d.is_dir() and d.name.startswith(f"{resume_run_id}__")
+        ]
+        if len(matching) > 1:
+            raise ValueError(
+                f"Multiple run directories match run_id={resume_run_id}: {[d.name for d in matching]}"
+            )
+        if matching:
+            out_dir = matching[0]
+
+    checkpoint_name = f"{algorithm_name.lower()}_checkpoint_{resume_run_id}.json"
+    checkpoint_path: Optional[Path] = (out_dir / checkpoint_name) if out_dir is not None else None
+
+    # GCS fallback: 本地 checkpoint 缺失时（Cloud Run 重启后 /tmp 为空）从 GCS 下载
+    if (checkpoint_path is None or not checkpoint_path.exists()) and gcs_output_uri and project_id:
+        gcs_uri = f"{gcs_output_uri.rstrip('/')}/checkpoints/{checkpoint_name}"
+        tmp_path = output_root / checkpoint_name
+        tmp_path.parent.mkdir(parents=True, exist_ok=True)
+        try:
+            download_file_from_gcs_uri(gcs_uri, tmp_path, project_id)
+            # 从 checkpoint JSON 取回 run_tag，重建标准 out_dir
+            raw = json.loads(tmp_path.read_text(encoding="utf-8"))
+            run_tag = raw.get("run_tag", "")
+            if run_tag:
+                out_dir = output_root / "runs" / run_tag
+                out_dir.mkdir(parents=True, exist_ok=True)
+                checkpoint_path = out_dir / checkpoint_name
+                tmp_path.replace(checkpoint_path)
+            else:
+                out_dir = output_root
+                checkpoint_path = tmp_path
+            print(f"[RESUME] Downloaded checkpoint from GCS: {gcs_uri}", flush=True)
+        except Exception as exc:
+            raise FileNotFoundError(
+                f"Checkpoint not found locally (runs_dir={runs_dir}) or on GCS ({gcs_uri}).\n"
+                f"Reason: {exc}"
+            ) from exc
+
+    if out_dir is None:
         raise FileNotFoundError(
             f"No run directory found for run_id={resume_run_id} under {runs_dir}. "
-            f"Ensure the original run used the same output_root."
+            f"Ensure the original run used the same output_root, "
+            f"or set gcs_output_uri for Cloud Run resume."
         )
-    if len(matching) > 1:
-        raise ValueError(
-            f"Multiple run directories match run_id={resume_run_id}: {[d.name for d in matching]}"
-        )
-    out_dir = matching[0]
-    checkpoint_path = out_dir / f"{algorithm_name.lower()}_checkpoint_{resume_run_id}.json"
-    if not checkpoint_path.exists():
+    if checkpoint_path is None or not checkpoint_path.exists():
         raise FileNotFoundError(
             f"Checkpoint file not found: {checkpoint_path}\n"
             f"The original run may not have been started with checkpoint support. "
@@ -991,6 +1028,8 @@ def main() -> None:
             output_root=output_root,
             resume_run_id=args.resume_run_id,
             algorithm_name=algorithm_name,
+            gcs_output_uri=gcs_output_uri,
+            project_id=PROJECT_ID,
         )
         RUN_TS = args.resume_run_id
         OUT_DIR = _resume_info["out_dir"]

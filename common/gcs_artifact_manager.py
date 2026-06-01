@@ -99,3 +99,19 @@ def upload_file_to_gcs_by_model(
     blob = bucket.blob(blob_name)
     blob.upload_from_filename(str(local_path))
     return f"gs://{bucket_name}/{blob_name}"
+
+
+def upload_file_to_gcs_uri(local_path: Path, gcs_uri: str, project_id: str) -> str:
+    """Upload a local file to an exact GCS URI (gs://bucket/blob/path)."""
+    bucket_name, blob_name = parse_gcs_uri(gcs_uri)
+    if not blob_name:
+        raise ValueError(f"GCS URI must include a blob path: {gcs_uri}")
+    storage.Client(project=project_id).bucket(bucket_name).blob(blob_name).upload_from_filename(str(local_path))
+    return gcs_uri
+
+
+def download_file_from_gcs_uri(gcs_uri: str, local_path: Path, project_id: str) -> None:
+    """Download a file from an exact GCS URI to a local path, creating parent dirs as needed."""
+    bucket_name, blob_name = parse_gcs_uri(gcs_uri)
+    local_path.parent.mkdir(parents=True, exist_ok=True)
+    storage.Client(project=project_id).bucket(bucket_name).blob(blob_name).download_to_filename(str(local_path))
