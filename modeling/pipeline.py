@@ -7,6 +7,7 @@
 
 from __future__ import annotations
 
+import gc
 import json
 import re
 from dataclasses import dataclass
@@ -558,6 +559,8 @@ def train_and_save_predictions(
                 _write_checkpoint(checkpoint_path, runtime.run_ts, runtime.run_tag, results, len(entities),
                                   gcs_output_uri=runtime.gcs_output_uri, project_id=runtime.project_id)
             continue
+        finally:
+            gc.collect()
 
     if store_pred_to_bq and bq_pred_table.strip():
         print(
