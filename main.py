@@ -895,7 +895,11 @@ def main() -> None:
     print(f"[CONFIG] algorithm_name={algorithm_name}, algorithm_version={algorithm_version}", flush=True)
     sample_key_columns = _load_required_columns(runtime_cfg, "sample_key_columns")
     entity_id_columns = _load_required_columns(runtime_cfg, "entity_id_columns")
-    model_name_columns = _load_required_columns(runtime_cfg, "model_name_columns")
+    model_name_columns = (
+        _load_required_columns(runtime_cfg, "model_name_columns")
+        if runtime_cfg.get("model_name_columns")
+        else entity_id_columns
+    )
     features_default = _require_runtime_field(runtime_cfg, "features")
     label_column = str(runtime_cfg.get("label_column", "item_qty")).strip() or "item_qty"
     time_column = str(runtime_cfg.get("time_column", "day_date")).strip() or "day_date"

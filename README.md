@@ -9,8 +9,11 @@
 ## 快速开始
 
 ```powershell
-cd scripts/gcp_python_modeling
+cd sales_forecast
 python main.py --scenario bq_local_local --config config/profiles/item_channel_ma_week/config_v001.yaml --max-entities 3
 ```
 
 详细执行说明：[docs/03_execution_guide.md](docs/03_execution_guide.md)
+
+常用发布入口（镜像已推送，跳过构建）：
+- [Cloud Run 最短发布流程](docs/03_execution_guide.md)

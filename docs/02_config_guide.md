@@ -276,7 +276,7 @@ python main.py `
 gcloud run jobs execute gcp-python-modeling-demo `
   --region europe-west4 --wait `
   --args=--scenario=bq_gcp_bq `
-  --args=--config=config/profiles/item_channel_ma_week/config_v001.yaml
+  --args=--config=profiles/item_channel_ma_week/config_v001.yaml
 ```
 
 ### 场景 5：GCS CSV 模式（先导出源数据再运行）

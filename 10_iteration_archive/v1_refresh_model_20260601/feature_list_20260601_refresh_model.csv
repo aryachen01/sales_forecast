@@ -1,0 +1,282 @@
+﻿seq,field_name,type,mode,is_nested,description,is_in_hot,is_in_stable,is_in_fluc,is_in_refresh_model
+1,week_no,INTEGER,NULLABLE,N,IKEA 周序号（如 202401）,1,1,1,0
+2,ikea_week_start_date,DATE,NULLABLE,N,IKEA 周开始日期,#N/A,#N/A,#N/A,0
+3,ikea_week_end_date,DATE,NULLABLE,N,IKEA 周结束日期,#N/A,#N/A,#N/A,0
+4,basket_type,STRING,NULLABLE,N,商品篮类型（如 ART）,#N/A,#N/A,#N/A,0
+5,basket_id,STRING,NULLABLE,N,商品篮 ID（原始编码）,1,1,1,0
+6,basket_id_sk,STRING,NULLABLE,N,商品篮代理键（basket_type || basket_id）,#N/A,#N/A,#N/A,0
+7,market_area_no_orig,STRING,NULLABLE,N,原始市场区域编码（MA 编号）,1,1,1,0
+8,sales_channel,STRING,NULLABLE,N,销售渠道（Online / Store）,#N/A,#N/A,#N/A,0
+9,bu_name,STRING,NULLABLE,N,门店 / BU 名称,#N/A,#N/A,#N/A,0
+10,item_name,STRING,NULLABLE,N,商品名称,#N/A,#N/A,#N/A,0
+11,hfb_code,STRING,NULLABLE,N,HFB 编码（Home Furnishing Business）,#N/A,#N/A,#N/A,0
+12,hfb_name,STRING,NULLABLE,N,HFB 名称,#N/A,#N/A,#N/A,0
+13,pra_code,STRING,NULLABLE,N,PRA 编码（Product Range Area）,#N/A,#N/A,#N/A,0
+14,pra_name,STRING,NULLABLE,N,PRA 名称,#N/A,#N/A,#N/A,0
+15,pa_code,STRING,NULLABLE,N,PA 编码（Product Area）,1,1,1,1
+16,pa_name,STRING,NULLABLE,N,PA 名称,#N/A,#N/A,#N/A,0
+17,hfa,STRING,NULLABLE,N,HFA 编码（Home Furnishing Area）,#N/A,#N/A,#N/A,0
+18,basket_cnt_in_pra,INTEGER,NULLABLE,N,同 PRA 下的商品篮数量,#N/A,#N/A,#N/A,0
+19,product_cluster,STRING,NULLABLE,N,商品销量分层标签（热销 / 稳定小量 / 波动 / 滞销 / 其他商品）,#N/A,#N/A,#N/A,0
+20,top_flag,INTEGER,NULLABLE,N,头部商品标记（0/1）,#N/A,#N/A,#N/A,1
+21,tail_flag,INTEGER,NULLABLE,N,尾部商品标记（0/1）,#N/A,#N/A,#N/A,1
+22,lag1_outof_stock,INTEGER,NULLABLE,N,前 1 周缺货标记（0/1）,#N/A,#N/A,#N/A,1
+23,lag2_outof_stock,INTEGER,NULLABLE,N,前 2 周缺货标记（0/1）,#N/A,#N/A,#N/A,1
+24,lag3_outof_stock,INTEGER,NULLABLE,N,前 3 周缺货标记（0/1）,#N/A,#N/A,#N/A,1
+25,lag4_outof_stock,INTEGER,NULLABLE,N,前 4 周缺货标记（0/1）,#N/A,#N/A,#N/A,1
+26,in_stock_days,INTEGER,NULLABLE,N,本周有货天数,#N/A,#N/A,#N/A,0
+27,in_stock_ratio,FLOAT,NULLABLE,N,本周有货天数占比（in_stock_days / 7）,1,1,1,1
+28,in_stock_flag_weekly,INTEGER,NULLABLE,N,本周是否有货（周级标记，0/1）,#N/A,#N/A,#N/A,0
+29,outof_stock_flag_weekly,INTEGER,NULLABLE,N,本周是否缺货（周级标记，0/1）,#N/A,#N/A,#N/A,0
+30,ib_flag,INTEGER,NULLABLE,N,本周是否有 IB（IKEA Business）折扣（0/1）,#N/A,#N/A,#N/A,0
+31,delivery_coupon_flag,INTEGER,NULLABLE,N,本周是否有运费券（0/1）,#N/A,#N/A,#N/A,0
+32,price_off_flag,INTEGER,NULLABLE,N,本周是否有 Price Off 价格折扣（0/1）,#N/A,#N/A,#N/A,0
+33,order_discount_flag,INTEGER,NULLABLE,N,本周是否有订单级折扣（满减 / 满折）（0/1）,#N/A,#N/A,#N/A,0
+34,utg_flag,INTEGER,NULLABLE,N,本周是否有 UTG 折扣（0/1）,#N/A,#N/A,#N/A,0
+35,delivery_coupon_condition_1,INTEGER,NULLABLE,N,运费券 ¥1 档是否触发（0/1）,#N/A,#N/A,#N/A,0
+36,delivery_coupon_condition_100,INTEGER,NULLABLE,N,运费券 ¥100 档是否触发（0/1）,#N/A,#N/A,#N/A,0
+37,delivery_coupon_condition_300,INTEGER,NULLABLE,N,运费券 ¥300 档是否触发（0/1）,#N/A,#N/A,#N/A,0
+38,delivery_coupon_condition_500,INTEGER,NULLABLE,N,运费券 ¥500 档是否触发（0/1）,#N/A,#N/A,#N/A,0
+39,delivery_coupon_condition_1000,INTEGER,NULLABLE,N,运费券 ¥1000 档是否触发（0/1）,#N/A,#N/A,#N/A,0
+40,delivery_coupon_condition_1000_plus,INTEGER,NULLABLE,N,运费券 ¥1000+ 档是否触发（0/1）,#N/A,#N/A,#N/A,0
+41,order_discount_condition_1,INTEGER,NULLABLE,N,订单折扣 ¥1 档是否触发（0/1）,#N/A,#N/A,#N/A,0
+42,order_discount_condition_100,INTEGER,NULLABLE,N,订单折扣 ¥100 档是否触发（0/1）,#N/A,#N/A,#N/A,0
+43,order_discount_condition_300,INTEGER,NULLABLE,N,订单折扣 ¥300 档是否触发（0/1）,#N/A,#N/A,#N/A,0
+44,order_discount_condition_500,INTEGER,NULLABLE,N,订单折扣 ¥500 档是否触发（0/1）,#N/A,#N/A,#N/A,0
+45,order_discount_condition_1000,INTEGER,NULLABLE,N,订单折扣 ¥1000 档是否触发（0/1）,#N/A,#N/A,#N/A,0
+46,order_discount_condition_1000_plus,INTEGER,NULLABLE,N,订单折扣 ¥1000+ 档是否触发（0/1）,#N/A,#N/A,#N/A,0
+47,price_off_condition_utg,INTEGER,NULLABLE,N,Price Off UTG 档是否触发（0/1）,#N/A,#N/A,#N/A,1
+48,price_off_condition_1,INTEGER,NULLABLE,N,Price Off ¥1 档是否触发（0/1）,#N/A,#N/A,#N/A,1
+49,price_off_condition_1_plus,INTEGER,NULLABLE,N,Price Off ¥1+ 档是否触发（0/1）,#N/A,#N/A,#N/A,1
+50,ratio_ib_flag,FLOAT,NULLABLE,N,IB 折扣覆盖天数占比（周内）,#N/A,#N/A,#N/A,0
+51,ratio_delivery_coupon_flag,FLOAT,NULLABLE,N,运费券覆盖天数占比（周内）,1,1,1,1
+52,ratio_price_off_flag,FLOAT,NULLABLE,N,Price Off 覆盖天数占比（周内）,1,1,1,1
+53,ratio_order_discount_flag,FLOAT,NULLABLE,N,订单折扣覆盖天数占比（周内）,0,1,1,1
+54,ratio_utg_flag,FLOAT,NULLABLE,N,UTG 折扣覆盖天数占比（周内）,#N/A,#N/A,#N/A,1
+55,ratio_delivery_coupon_condition_1,FLOAT,NULLABLE,N,运费券 ¥1 档覆盖天数占比,1,1,1,1
+56,ratio_delivery_coupon_condition_100,FLOAT,NULLABLE,N,运费券 ¥100 档覆盖天数占比,1,1,1,1
+57,ratio_delivery_coupon_condition_300,FLOAT,NULLABLE,N,运费券 ¥300 档覆盖天数占比,1,1,1,1
+58,ratio_delivery_coupon_condition_500,FLOAT,NULLABLE,N,运费券 ¥500 档覆盖天数占比,1,1,1,1
+59,ratio_delivery_coupon_condition_1000,FLOAT,NULLABLE,N,运费券 ¥1000 档覆盖天数占比,1,1,1,1
+60,ratio_delivery_coupon_condition_1000_plus,FLOAT,NULLABLE,N,运费券 ¥1000+ 档覆盖天数占比,1,1,1,1
+61,ratio_order_discount_condition_1,FLOAT,NULLABLE,N,订单折扣 ¥1 档覆盖天数占比,0,1,1,1
+62,ratio_order_discount_condition_100,FLOAT,NULLABLE,N,订单折扣 ¥100 档覆盖天数占比,0,1,1,1
+63,ratio_order_discount_condition_300,FLOAT,NULLABLE,N,订单折扣 ¥300 档覆盖天数占比,0,1,1,1
+64,ratio_order_discount_condition_500,FLOAT,NULLABLE,N,订单折扣 ¥500 档覆盖天数占比,0,1,1,1
+65,ratio_order_discount_condition_1000,FLOAT,NULLABLE,N,订单折扣 ¥1000 档覆盖天数占比,0,1,1,1
+66,ratio_order_discount_condition_1000_plus,FLOAT,NULLABLE,N,订单折扣 ¥1000+ 档覆盖天数占比,0,1,1,1
+67,ratio_price_off_condition_utg,FLOAT,NULLABLE,N,Price Off UTG 档覆盖天数占比,#N/A,#N/A,#N/A,1
+68,ratio_price_off_condition_1,FLOAT,NULLABLE,N,Price Off ¥1 档覆盖天数占比,1,1,1,1
+69,ratio_price_off_condition_1_plus,FLOAT,NULLABLE,N,Price Off ¥1+ 档覆盖天数占比,1,1,1,1
+70,non_workday_cnt,INTEGER,NULLABLE,N,本周非工作日天数,#N/A,#N/A,#N/A,0
+71,holiday_days_cnt,INTEGER,NULLABLE,N,本周法定节假日天数,#N/A,#N/A,#N/A,0
+72,ratio_days_in_holiday,FLOAT,NULLABLE,N,本周法定节假日天数占比,#N/A,#N/A,#N/A,0
+73,ratio_non_workday,FLOAT,NULLABLE,N,本周非工作日天数占比,1,1,1,1
+74,is_yuandan,INTEGER,NULLABLE,N,本周是否含元旦（0/1）,#N/A,#N/A,#N/A,0
+75,is_spring_festival,INTEGER,NULLABLE,N,本周是否含春节（0/1）,#N/A,#N/A,#N/A,0
+76,is_qingming,INTEGER,NULLABLE,N,本周是否含清明（0/1）,#N/A,#N/A,#N/A,0
+77,is_labor_day,INTEGER,NULLABLE,N,本周是否含劳动节（0/1）,#N/A,#N/A,#N/A,0
+78,is_dragon_boat,INTEGER,NULLABLE,N,本周是否含端午（0/1）,#N/A,#N/A,#N/A,0
+79,is_mid_autumn,INTEGER,NULLABLE,N,本周是否含中秋（0/1）,#N/A,#N/A,#N/A,0
+80,is_mid_autumn_national_day,INTEGER,NULLABLE,N,本周是否含中秋 + 国庆连假（0/1）,#N/A,#N/A,#N/A,0
+81,is_national_day,INTEGER,NULLABLE,N,本周是否含国庆（0/1）,#N/A,#N/A,#N/A,0
+82,holiday_importance,FLOAT,NULLABLE,N,节假日重要程度得分（越高越重要）,#N/A,#N/A,#N/A,1
+83,week_number,INTEGER,NULLABLE,N,自然年内周序号（1-52）,#N/A,#N/A,#N/A,0
+84,is_spring,INTEGER,NULLABLE,N,是否为春季（0/1）,#N/A,#N/A,#N/A,0
+85,is_summer,INTEGER,NULLABLE,N,是否为夏季（0/1）,#N/A,#N/A,#N/A,0
+86,is_autumn,INTEGER,NULLABLE,N,是否为秋季（0/1）,#N/A,#N/A,#N/A,0
+87,is_winter,INTEGER,NULLABLE,N,是否为冬季（0/1）,#N/A,#N/A,#N/A,0
+88,spring_stage,FLOAT,NULLABLE,N,春季进度（0=未开始，1=已结束）,1,1,1,1
+89,summer_stage,FLOAT,NULLABLE,N,夏季进度（0=未开始，1=已结束）,1,1,1,1
+90,autumn_stage,FLOAT,NULLABLE,N,秋季进度（0=未开始，1=已结束）,1,1,1,1
+91,winter_stage,FLOAT,NULLABLE,N,冬季进度（0=未开始，1=已结束）,1,1,1,1
+92,ratio_is_yuandan,FLOAT,NULLABLE,N,元旦覆盖天数占比,1,1,1,1
+93,ratio_is_spring_festival,FLOAT,NULLABLE,N,春节覆盖天数占比,1,1,1,1
+94,ratio_is_qingming,FLOAT,NULLABLE,N,清明覆盖天数占比,1,1,1,1
+95,ratio_is_labor_day,FLOAT,NULLABLE,N,劳动节覆盖天数占比,1,1,1,1
+96,ratio_is_dragon_boat,FLOAT,NULLABLE,N,端午覆盖天数占比,1,1,1,1
+97,ratio_is_mid_autumn,FLOAT,NULLABLE,N,中秋覆盖天数占比,1,1,1,1
+98,ratio_is_national_day,FLOAT,NULLABLE,N,国庆覆盖天数占比,1,1,1,1
+99,camp_week_flag,INTEGER,NULLABLE,N,本周是否属于促销活动周（0/1）,#N/A,#N/A,#N/A,1
+100,camp_scin_flag,INTEGER,NULLABLE,N,本周是否有 SCIN 促销活动（0/1）,1,1,1,1
+101,is_618,INTEGER,NULLABLE,N,本周是否属于 618 活动（0/1）,#N/A,#N/A,#N/A,0
+102,is_Back_to_School,INTEGER,NULLABLE,N,本周是否属于返校季活动（0/1）,#N/A,#N/A,#N/A,0
+103,is_National_Holiday,INTEGER,NULLABLE,N,本周是否属于国庆活动（0/1）,#N/A,#N/A,#N/A,0
+104,is_D11,INTEGER,NULLABLE,N,本周是否属于双十一活动（0/1）,#N/A,#N/A,#N/A,0
+105,is_CNY,INTEGER,NULLABLE,N,本周是否属于春节活动（0/1）,#N/A,#N/A,#N/A,0
+106,is_618_range,INTEGER,NULLABLE,N,本周是否在 618 活动周期范围内（0/1）,#N/A,#N/A,#N/A,0
+107,is_Back_to_School_range,INTEGER,NULLABLE,N,本周是否在返校季活动周期范围内（0/1）,#N/A,#N/A,#N/A,0
+108,is_National_Holiday_range,INTEGER,NULLABLE,N,本周是否在国庆活动周期范围内（0/1）,#N/A,#N/A,#N/A,0
+109,is_D11_range,INTEGER,NULLABLE,N,本周是否在双十一活动周期范围内（0/1）,#N/A,#N/A,#N/A,0
+110,is_CNY_range,INTEGER,NULLABLE,N,本周是否在春节活动周期范围内（0/1）,#N/A,#N/A,#N/A,0
+111,ratio_is_618,FLOAT,NULLABLE,N,618 活动覆盖天数占比,1,1,1,1
+112,ratio_is_Back_to_School,FLOAT,NULLABLE,N,返校季活动覆盖天数占比,1,1,1,1
+113,ratio_is_National_Holiday,FLOAT,NULLABLE,N,国庆活动覆盖天数占比,1,1,1,1
+114,ratio_is_D11,FLOAT,NULLABLE,N,双十一活动覆盖天数占比,1,1,1,1
+115,ratio_is_CNY,FLOAT,NULLABLE,N,春节活动覆盖天数占比,1,1,1,1
+116,ratio_is_618_range,FLOAT,NULLABLE,N,618 活动周期覆盖天数占比,1,1,1,1
+117,ratio_is_Back_to_School_range,FLOAT,NULLABLE,N,返校季活动周期覆盖天数占比,1,1,1,1
+118,ratio_is_National_Holiday_range,FLOAT,NULLABLE,N,国庆活动周期覆盖天数占比,1,1,1,1
+119,ratio_is_D11_range,FLOAT,NULLABLE,N,双十一活动周期覆盖天数占比,1,1,1,1
+120,ratio_is_CNY_range,FLOAT,NULLABLE,N,春节活动周期覆盖天数占比,1,1,1,1
+121,ratio_days_in_campaign,FLOAT,NULLABLE,N,促销活动覆盖天数占比（汇总）,0,1,1,1
+122,camp_week_aft_flag,INTEGER,NULLABLE,N,是否为促销活动后一周（0/1）,#N/A,#N/A,#N/A,1
+123,camp_week_pre_flag,INTEGER,NULLABLE,N,是否为促销活动前一周（0/1）,#N/A,#N/A,#N/A,1
+124,pre_is_618,INTEGER,NULLABLE,N,是否为 618 前一周（0/1）,1,1,1,1
+125,aft_is_618,INTEGER,NULLABLE,N,是否为 618 后一周（0/1）,1,1,1,1
+126,pre_is_d11,INTEGER,NULLABLE,N,是否为双十一前一周（0/1）,1,1,1,1
+127,aft_is_d11,INTEGER,NULLABLE,N,是否为双十一后一周（0/1）,1,1,1,1
+128,days_in_campaign_aft,INTEGER,NULLABLE,N,本周落在促销活动结束后的天数,#N/A,#N/A,#N/A,1
+129,days_in_campaign_pre,INTEGER,NULLABLE,N,本周落在促销活动开始前的天数,#N/A,#N/A,#N/A,1
+130,ratio_in_campaign_aft,FLOAT,NULLABLE,N,促销后溢出天数占比,0,1,1,1
+131,ratio_in_campaign_pre,FLOAT,NULLABLE,N,促销前置天数占比,0,1,1,1
+132,min_item_qty,NUMERIC,NULLABLE,N,历史滚动窗口内最小周销量,#N/A,#N/A,#N/A,0
+133,max_item_qty,NUMERIC,NULLABLE,N,历史滚动窗口内最大周销量,#N/A,#N/A,#N/A,0
+134,sum_item_qty,NUMERIC,NULLABLE,N,历史滚动窗口内总销量,#N/A,#N/A,#N/A,0
+135,min_qty_ref,NUMERIC,NULLABLE,N,参考销量最小值（滚动窗口）,#N/A,#N/A,#N/A,0
+136,max_qty_ref,NUMERIC,NULLABLE,N,参考销量最大值（滚动窗口）,#N/A,#N/A,#N/A,0
+137,sum_qty_ref,NUMERIC,NULLABLE,N,参考销量总和（滚动窗口）,#N/A,#N/A,#N/A,0
+138,avg_qty_ref,NUMERIC,NULLABLE,N,参考销量均值（滚动窗口）,#N/A,#N/A,#N/A,0
+139,week_cnt,INTEGER,NULLABLE,N,滚动窗口内总周数,#N/A,#N/A,#N/A,0
+140,sales_week_cnt,INTEGER,NULLABLE,N,滚动窗口内有销售的周数,#N/A,#N/A,#N/A,0
+141,sales_week_ratio,FLOAT,NULLABLE,N,滚动窗口内有销售周数占比,1,1,1,0
+142,min_item_qty_noncamp,NUMERIC,NULLABLE,N,非促销周最小销量（滚动窗口）,#N/A,#N/A,#N/A,0
+143,max_item_qty_noncamp,NUMERIC,NULLABLE,N,非促销周最大销量（滚动窗口）,#N/A,#N/A,#N/A,0
+144,sum_item_qty_noncamp,NUMERIC,NULLABLE,N,非促销周总销量（滚动窗口）,#N/A,#N/A,#N/A,0
+145,min_qty_ref_noncamp,NUMERIC,NULLABLE,N,非促销周参考销量最小值,#N/A,#N/A,#N/A,0
+146,max_qty_ref_noncamp,NUMERIC,NULLABLE,N,非促销周参考销量最大值,#N/A,#N/A,#N/A,0
+147,sum_qty_ref_noncamp,NUMERIC,NULLABLE,N,非促销周参考销量总和,#N/A,#N/A,#N/A,0
+148,avg_qty_ref_noncamp,NUMERIC,NULLABLE,N,非促销周参考销量均值,#N/A,#N/A,#N/A,0
+149,week_cnt_noncamp,INTEGER,NULLABLE,N,滚动窗口内非促销周总数,#N/A,#N/A,#N/A,0
+150,sales_week_cnt_noncamp,INTEGER,NULLABLE,N,滚动窗口内非促销有销售周数,#N/A,#N/A,#N/A,0
+151,sales_week_ratio_noncamp,FLOAT,NULLABLE,N,非促销周有销售周数占比,#N/A,#N/A,#N/A,0
+152,item_qty_avg_r4,NUMERIC,NULLABLE,N,近 4 周平均销量,0,1,1,1
+153,item_qty_max_r4,NUMERIC,NULLABLE,N,近 4 周最大销量,1,1,1,1
+154,item_qty_min_r4,NUMERIC,NULLABLE,N,近 4 周最小销量,1,1,1,1
+155,qty_ref_avg_r4,NUMERIC,NULLABLE,N,近 4 周参考销量均值,0,1,1,1
+156,qty_ref_max_r4,NUMERIC,NULLABLE,N,近 4 周参考销量最大值,1,1,1,1
+157,qty_ref_min_r4,NUMERIC,NULLABLE,N,近 4 周参考销量最小值,1,1,1,1
+158,item_qty_avg_r12,NUMERIC,NULLABLE,N,近 12 周平均销量,0,1,1,1
+159,item_qty_max_r12,NUMERIC,NULLABLE,N,近 12 周最大销量,1,1,1,1
+160,item_qty_min_r12,NUMERIC,NULLABLE,N,近 12 周最小销量,1,1,1,1
+161,qty_ref_avg_r12,NUMERIC,NULLABLE,N,近 12 周参考销量均值,0,1,1,1
+162,qty_ref_max_r12,NUMERIC,NULLABLE,N,近 12 周参考销量最大值,1,1,1,1
+163,qty_ref_min_r12,NUMERIC,NULLABLE,N,近 12 周参考销量最小值,1,1,1,1
+164,std_item_qty_div_r4,NUMERIC,NULLABLE,N,近 4 周销量标准差,1,1,1,1
+165,std_item_qty_div_r12,NUMERIC,NULLABLE,N,近 12 周销量标准差,1,1,1,1
+166,std_qty_ref_div_r4,NUMERIC,NULLABLE,N,近 4 周参考销量标准差,#N/A,#N/A,#N/A,1
+167,std_qty_ref_div_r12,NUMERIC,NULLABLE,N,近 12 周参考销量标准差,#N/A,#N/A,#N/A,1
+168,weekly_sale_incl_tax_price,FLOAT,NULLABLE,N,本周含税实售价,1,1,1,1
+169,sale_regular_price_ori_incl_tax,FLOAT,NULLABLE,N,原始含税正价,#N/A,#N/A,#N/A,0
+170,last_week_price,FLOAT,NULLABLE,N,上周含税实售价,#N/A,#N/A,#N/A,0
+171,last_week_regular_price,FLOAT,NULLABLE,N,上周含税正价,#N/A,#N/A,#N/A,0
+172,rolling_13w_min_price,FLOAT,NULLABLE,N,近 13 周最低实售价,#N/A,#N/A,#N/A,1
+173,rolling_4w_min_price,FLOAT,NULLABLE,N,近 4 周最低实售价,#N/A,#N/A,#N/A,1
+174,discount_rate_this_week,FLOAT,NULLABLE,N,本周折扣率（实售价 / 正价）,0,1,1,1
+175,discount_rate_last_week,FLOAT,NULLABLE,N,上周折扣率,0,1,1,1
+176,discount_rate_vs_last_week,FLOAT,NULLABLE,N,本周折扣率相对上周变化量,#N/A,#N/A,#N/A,1
+177,discount_rate_next_week,FLOAT,NULLABLE,N,下周折扣率（前瞻特征）,0,1,1,1
+178,discount_rate_vs_next_week,FLOAT,NULLABLE,N,本周折扣率相对下周变化量,#N/A,#N/A,#N/A,1
+179,is_rolling_4w_min_price,INTEGER,NULLABLE,N,本周是否为近 4 周最低价（0/1）,1,1,1,1
+180,is_rolling_13w_min_price,INTEGER,NULLABLE,N,本周是否为近 13 周最低价（0/1）,1,1,1,1
+181,in_scin_flag,INTEGER,NULLABLE,N,本周是否有 SCIN 活动（0/1）,1,1,1,1
+182,scin_is_nlp_flag,INTEGER,NULLABLE,N,SCIN 活动是否为 NLP 类型（0/1）,1,1,1,1
+183,baseline_forecast_quantity,INTEGER,NULLABLE,N,SCIN 基线预测量,#N/A,#N/A,#N/A,1
+184,extra_ordered_quantity_retail,NUMERIC,NULLABLE,N,SCIN 额外订货量（零售口径）,#N/A,#N/A,#N/A,1
+185,ratio_scin_extra_over_base,NUMERIC,NULLABLE,N,SCIN 额外量相对基线的比值,#N/A,#N/A,#N/A,1
+186,ratio_in_scin_days,FLOAT,NULLABLE,N,SCIN 活动覆盖天数占比（本周内）,1,1,1,1
+187,ratio_of_scin_total_days,FLOAT,NULLABLE,N,本周在 SCIN 整体活动周期中的天数占比,1,1,1,1
+188,item_qty_r4w,NUMERIC,NULLABLE,N,[Y] 近 4 周累计销量（滚动目标，r4w）,#N/A,#N/A,#N/A,0
+189,qty_ref_r4w,NUMERIC,NULLABLE,N,[Y] 近 4 周参考销量（滚动目标，r4w 口径）,#N/A,#N/A,#N/A,0
+190,item_qty_weekly,NUMERIC,NULLABLE,N,[Y] 本周实际销量（主目标变量）,#N/A,#N/A,#N/A,0
+191,qty_ref_weekly,NUMERIC,NULLABLE,N,[Y] 本周参考销量（另一口径目标变量）,#N/A,#N/A,#N/A,0
+192,year,STRING,NULLABLE,N,字符串,#N/A,#N/A,#N/A,1
+193,week,STRING,NULLABLE,N,字符串,#N/A,#N/A,#N/A,1
+194,item_qty_last1,NUMERIC,NULLABLE,N,数值型特征,1,1,1,1
+195,item_qty_last2,NUMERIC,NULLABLE,N,数值型特征,1,1,1,1
+196,item_qty_last3,NUMERIC,NULLABLE,N,数值型特征,1,1,1,1
+197,item_qty_last4,NUMERIC,NULLABLE,N,数值型特征,1,1,1,1
+198,item_qty_last52,NUMERIC,NULLABLE,N,数值型特征,1,1,1,1
+199,item_qty_up_r1,NUMERIC,NULLABLE,N,数值型特征,1,1,1,1
+200,item_qty_up_r2,NUMERIC,NULLABLE,N,数值型特征,1,1,1,1
+201,item_qty_wa_r4,NUMERIC,NULLABLE,N,数值型特征,1,1,1,1
+202,item_qty_std_r4,FLOAT,NULLABLE,N,数值型特征,1,1,1,1
+203,item_qty_slope_r4,FLOAT,NULLABLE,N,数值型特征,1,1,1,1
+204,is_sto_available_isr,INTEGER,NULLABLE,N,标记字段（0/1）,#N/A,#N/A,#N/A,1
+205,is_sto_isr,INTEGER,NULLABLE,N,标记字段（0/1）,#N/A,#N/A,#N/A,1
+206,sto_overlap_days,INTEGER,NULLABLE,N,天数重叠计数,#N/A,#N/A,#N/A,0
+207,sto_overlap_ratio,FLOAT,NULLABLE,N,数值型特征,#N/A,#N/A,#N/A,1
+208,is_sto_isr_at_week_end,INTEGER,NULLABLE,N,标记字段（0/1）,#N/A,#N/A,#N/A,0
+209,is_ma_available_isr,INTEGER,NULLABLE,N,标记字段（0/1）,#N/A,#N/A,#N/A,0
+210,is_ma_isr,INTEGER,NULLABLE,N,标记字段（0/1）,#N/A,#N/A,#N/A,0
+211,is_ma_overlap_days,INTEGER,NULLABLE,N,天数重叠计数,#N/A,#N/A,#N/A,0
+212,ma_overlap_ratio,FLOAT,NULLABLE,N,数值型特征,#N/A,#N/A,#N/A,0
+213,is_ma_isr_at_week_end,INTEGER,NULLABLE,N,标记字段（0/1）,#N/A,#N/A,#N/A,0
+214,is_sto_available,INTEGER,NULLABLE,N,标记字段（0/1）,#N/A,#N/A,#N/A,0
+215,is_sto_available_at_week_end,INTEGER,NULLABLE,N,标记字段（0/1）,#N/A,#N/A,#N/A,0
+216,sto_available_days,INTEGER,NULLABLE,N,整数型特征,#N/A,#N/A,#N/A,0
+217,sto_available_ratio,FLOAT,NULLABLE,N,数值型特征,#N/A,#N/A,#N/A,0
+218,is_ma_available,INTEGER,NULLABLE,N,标记字段（0/1）,#N/A,#N/A,#N/A,0
+219,ma_available_days,INTEGER,NULLABLE,N,整数型特征,#N/A,#N/A,#N/A,0
+220,ma_available_ratio,FLOAT,NULLABLE,N,数值型特征,#N/A,#N/A,#N/A,0
+221,is_ma_available_at_week_end,INTEGER,NULLABLE,N,标记字段（0/1）,#N/A,#N/A,#N/A,0
+222,truck_eligible,INTEGER,NULLABLE,N,整数型特征,#N/A,#N/A,#N/A,0
+223,is_truck_available,INTEGER,NULLABLE,N,标记字段（0/1）,#N/A,#N/A,#N/A,0
+224,truck_available_days,INTEGER,NULLABLE,N,整数型特征,#N/A,#N/A,#N/A,0
+225,truck_available_ratio,FLOAT,NULLABLE,N,数值型特征,#N/A,#N/A,#N/A,0
+226,is_truck_available_at_week_end,INTEGER,NULLABLE,N,标记字段（0/1）,#N/A,#N/A,#N/A,0
+227,parcel_eligible,INTEGER,NULLABLE,N,整数型特征,#N/A,#N/A,#N/A,0
+228,is_parcel_available,INTEGER,NULLABLE,N,标记字段（0/1）,#N/A,#N/A,#N/A,0
+229,parcel_available_days,INTEGER,NULLABLE,N,整数型特征,#N/A,#N/A,#N/A,0
+230,parcel_available_ratio,FLOAT,NULLABLE,N,数值型特征,#N/A,#N/A,#N/A,0
+231,is_parcel_available_at_week_end,INTEGER,NULLABLE,N,标记字段（0/1）,#N/A,#N/A,#N/A,0
+232,price_log,FLOAT,NULLABLE,N,数值型特征,1,1,1,1
+233,price_bin,INTEGER,NULLABLE,N,整数型特征,1,1,1,1
+234,price_elast,FLOAT,NULLABLE,N,数值型特征,1,1,1,1
+235,price_vs_avg,FLOAT,NULLABLE,N,数值型特征,1,1,1,1
+236,product_cluster2,STRING,NULLABLE,N,字符串,#N/A,#N/A,#N/A,1
+237,delivery_type,STRING,NULLABLE,N,字符串,1,0,0,1
+238,is_camp_nlp,INTEGER,NULLABLE,N,标记字段（0/1）,#N/A,#N/A,#N/A,1
+239,is_camp_tla,INTEGER,NULLABLE,N,标记字段（0/1）,#N/A,#N/A,#N/A,1
+240,is_camp_618,INTEGER,NULLABLE,N,标记字段（0/1）,#N/A,#N/A,#N/A,1
+241,is_camp_d11,INTEGER,NULLABLE,N,标记字段（0/1）,#N/A,#N/A,#N/A,1
+242,is_camp_tro,INTEGER,NULLABLE,N,标记字段（0/1）,#N/A,#N/A,#N/A,1
+243,is_camp_collection,INTEGER,NULLABLE,N,标记字段（0/1）,#N/A,#N/A,#N/A,1
+244,is_camp_national_holiday,INTEGER,NULLABLE,N,标记字段（0/1）,#N/A,#N/A,#N/A,1
+245,is_camp_back_to_school,INTEGER,NULLABLE,N,标记字段（0/1）,#N/A,#N/A,#N/A,1
+246,is_camp_spring,INTEGER,NULLABLE,N,标记字段（0/1）,#N/A,#N/A,#N/A,1
+247,is_camp_xmas,INTEGER,NULLABLE,N,标记字段（0/1）,#N/A,#N/A,#N/A,1
+248,is_camp_circular_week,INTEGER,NULLABLE,N,标记字段（0/1）,#N/A,#N/A,#N/A,1
+249,is_camp_cny,INTEGER,NULLABLE,N,标记字段（0/1）,#N/A,#N/A,#N/A,1
+250,has_camp,INTEGER,NULLABLE,N,整数型特征,#N/A,#N/A,#N/A,0
+251,utg_overlap_day,INTEGER,NULLABLE,N,整数型特征,#N/A,#N/A,#N/A,0
+252,nlp_overlap_day,INTEGER,NULLABLE,N,整数型特征,#N/A,#N/A,#N/A,0
+253,tla_overlap_day,INTEGER,NULLABLE,N,整数型特征,#N/A,#N/A,#N/A,0
+254,d618_overlap_day,INTEGER,NULLABLE,N,整数型特征,#N/A,#N/A,#N/A,0
+255,d11_overlap_day,INTEGER,NULLABLE,N,整数型特征,#N/A,#N/A,#N/A,0
+256,tro_overlap_day,INTEGER,NULLABLE,N,整数型特征,#N/A,#N/A,#N/A,0
+257,collection_overlap_day,INTEGER,NULLABLE,N,整数型特征,#N/A,#N/A,#N/A,0
+258,national_holiday_overlap_day,INTEGER,NULLABLE,N,整数型特征,#N/A,#N/A,#N/A,0
+259,xmas_overlap_day,INTEGER,NULLABLE,N,整数型特征,#N/A,#N/A,#N/A,0
+260,circular_week_overlap_day,INTEGER,NULLABLE,N,整数型特征,#N/A,#N/A,#N/A,0
+261,is_utg_start_week,INTEGER,NULLABLE,N,标记字段（0/1）,#N/A,#N/A,#N/A,0
+262,is_utg_end_week,INTEGER,NULLABLE,N,标记字段（0/1）,#N/A,#N/A,#N/A,0
+263,is_nlp_start_week,INTEGER,NULLABLE,N,标记字段（0/1）,#N/A,#N/A,#N/A,0
+264,is_nlp_end_week,INTEGER,NULLABLE,N,标记字段（0/1）,#N/A,#N/A,#N/A,0
+265,is_tla_start_week,INTEGER,NULLABLE,N,标记字段（0/1）,#N/A,#N/A,#N/A,0
+266,is_tla_end_week,INTEGER,NULLABLE,N,标记字段（0/1）,#N/A,#N/A,#N/A,0
+267,is_618_start_week,INTEGER,NULLABLE,N,标记字段（0/1）,#N/A,#N/A,#N/A,0
+268,is_618_end_week,INTEGER,NULLABLE,N,标记字段（0/1）,#N/A,#N/A,#N/A,0
+269,is_d11_start_week,INTEGER,NULLABLE,N,标记字段（0/1）,#N/A,#N/A,#N/A,0
+270,is_d11_end_week,INTEGER,NULLABLE,N,标记字段（0/1）,#N/A,#N/A,#N/A,0
+271,is_tro_start_week,INTEGER,NULLABLE,N,标记字段（0/1）,#N/A,#N/A,#N/A,0
+272,is_tro_end_week,INTEGER,NULLABLE,N,标记字段（0/1）,#N/A,#N/A,#N/A,0
+273,is_collection_start_week,INTEGER,NULLABLE,N,标记字段（0/1）,#N/A,#N/A,#N/A,0
+274,is_collection_end_week,INTEGER,NULLABLE,N,标记字段（0/1）,#N/A,#N/A,#N/A,0
+275,is_national_holiday_start_week,INTEGER,NULLABLE,N,标记字段（0/1）,#N/A,#N/A,#N/A,0
+276,is_national_holiday_end_week,INTEGER,NULLABLE,N,标记字段（0/1）,#N/A,#N/A,#N/A,0
+277,is_xmas_start_week,INTEGER,NULLABLE,N,标记字段（0/1）,#N/A,#N/A,#N/A,0
+278,is_xmas_end_week,INTEGER,NULLABLE,N,标记字段（0/1）,#N/A,#N/A,#N/A,0
+279,is_circular_week_start_week,INTEGER,NULLABLE,N,标记字段（0/1）,#N/A,#N/A,#N/A,0
+280,is_circular_week_end_week,INTEGER,NULLABLE,N,标记字段（0/1）,#N/A,#N/A,#N/A,0
+281,item_qty_weekly_ib,NUMERIC,NULLABLE,N,数值型特征,#N/A,#N/A,#N/A,0

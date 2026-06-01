@@ -15,7 +15,7 @@
 推荐从 `bq_local_local` 场景开始（BQ 读取 + 本地输出，不写回云端）。
 
 ```powershell
-cd scripts/gcp_python_modeling
+cd sales_forecast
 
 # 最小验证（3 个实体）
 python main.py `
@@ -47,7 +47,7 @@ python main.py `
 `runners/` 目录下的 `.ps1` 脚本封装了带心跳日志、PROGRESS 实时输出的完整运行链路：
 
 ```powershell
-cd scripts/gcp_python_modeling/runners
+cd sales_forecast/runners
 
 # 简单单次运行
 .\run_item_channel_ma_week_v001.ps1
@@ -79,12 +79,36 @@ python main.py `
 ### 第一步：构建 Docker 镜像
 
 ```powershell
-cd scripts/gcp_python_modeling
+cd sales_forecast
 
 gcloud builds submit `
   --tag europe-west4-docker.pkg.dev/ingka-cn-cop-stage/cloud-run-jobs/gcp-python-modeling-demo:latest `
   .
 ```
+
+### 可选：镜像已推送时的最短流程（推荐日常迭代）
+
+如果镜像已经在 Artifact Registry 中（例如 `:latest`），可跳过构建，直接更新并执行 Job：
+
+```powershell
+# Step A: 更新 Job 使用目标镜像
+gcloud run jobs update gcp-python-modeling-demo `
+  --image europe-west4-docker.pkg.dev/ingka-cn-cop-stage/cloud-run-jobs/gcp-python-modeling-demo:latest `
+  --region europe-west4
+
+# Step B: 执行（示例：小规模验证）
+gcloud run jobs execute gcp-python-modeling-demo `
+  --region europe-west4 --wait `
+  --args=--scenario=bq_gcp_bq `
+  --args=--config=profiles/item_channel_ma_week/config_v001.yaml `
+  --args=--max-entities=1
+
+# Step C: 查看日志
+gcloud run jobs logs read gcp-python-modeling-demo `
+  --region europe-west4 --limit 200
+```
+
+注意：Cloud Run 的 `--config` 参数应传 `profiles/...`，不要传 `config/profiles/...`。
 
 ### 第二步：部署 Cloud Run Job
 
@@ -109,7 +133,7 @@ gcloud run jobs deploy gcp-python-modeling-demo `
 gcloud run jobs execute gcp-python-modeling-demo `
   --region europe-west4 --wait `
   --args=--scenario=bq_gcp_bq `
-  --args=--config=config/profiles/item_channel_ma_week/config_v001.yaml
+  --args=--config=profiles/item_channel_ma_week/config_v001.yaml
 
 # 查看日志
 gcloud run jobs logs read gcp-python-modeling-demo `
@@ -134,7 +158,7 @@ python runners/export_source_data_to_gcs.py
 gcloud run jobs execute gcp-python-modeling-demo `
   --region europe-west4 --wait `
   --args=--scenario=gcs_gcp_gcs `
-  --args=--config=config/profiles/item_channel_ma_week/config_v001.yaml `
+  --args=--config=profiles/item_channel_ma_week/config_v001.yaml `
   --args=--max-entities=1
 ```
 
@@ -161,4 +185,4 @@ gcloud run jobs execute gcp-python-modeling-demo `
 | `PERMISSION_DENIED: storage.objects.create` | 缺少 GCS 权限 | 补充 `roles/storage.objectCreator` |
 | `[SKIP] Insufficient train rows` | 训练数据不足 | 降低 `min_train_rows` 或扩展时间范围 |
 | Docker 构建超时 | 网络 / 资源不足 | 增加 CPU 或使用预构建基础镜像 |
-| `FileNotFoundError: config not found` | config 路径错误 | 检查 `--config` 路径是否相对于 `gcp_python_modeling/` 根目录 |
+| `FileNotFoundError: config not found` | config 路径错误 | 本地运行使用 `config/profiles/...`；Cloud Run args 使用 `profiles/...` |

@@ -1,0 +1,275 @@
+# =============================================================================
+# Unified config: refresh_model / v001 (20260601) — bq_gcp_bq 生产场景
+# =============================================================================
+# 与 config_bll_lgbm_v001_20260601.yaml 同数据源/同模型线，
+# 差异点：
+#   1. 场景为 bq_gcp_bq：BQ 读 → GCP 执行 → 结果写回 BQ + GCS
+#   2. 本地输出路径不设置（使用系统默认 /tmp，适合 Cloud Run）
+#   3. Tuning 搜索空间扩展：新增 n_estimators，扩大 num_leaves 上限
+#   4. random_seed 改为 2025，n_iter 增至 60（与本地 bll 版本结果略有差异）
+# =============================================================================
+
+versioning:
+  model_line: refresh_model
+  version: v001
+
+# ── 输出路径覆盖（GCS 路径覆盖系统默认）──────────────────────────────────────
+output:
+  # local_output_dir: 不设置，Cloud Run 使用 /tmp（系统默认）
+  gcs_output_uri: 'gs://ocp_model_archive/refresh_model/v001_20260601'
+
+# ── 数据来源（按场景）────────────────────────────────────────────────────────
+source:
+  bq_local_local:
+    source_table: "ingka-cn-cop-stage.ikea_da_test.archen_model_base_with_y_r4w"
+    source_filters:
+      sales_channel: "Store"
+      product_cluster: "热销商品"
+  bq_gcp_bq:
+    source_table: "ingka-cn-cop-stage.ikea_da_test.archen_model_base_with_y_r4w"
+    source_filters:
+      sales_channel: "Store"
+      product_cluster: "热销商品"
+  gcs_gcp_gcs:
+    source_csv_uri: ""
+  local_local_local:
+    source_csv_local_path: ""
+
+# ── BQ 输出表名（bq_gcp_bq 场景写回 BigQuery 时使用）──────────────────────────
+bq_tables:
+  bq_pred_table: "ingka-cn-cop-stage.ikea_da_test.refresh_model_pred_train_test_detail"
+  bq_model_meta_table: "ingka-cn-cop-stage.ikea_da_test.refresh_model_metadata"
+  bq_feat_imp_table: "ingka-cn-cop-stage.ikea_da_test.refresh_model_feature_importance_detail"
+  bq_metrics_by_split_table: "ingka-cn-cop-stage.ikea_da_test.refresh_model_metrics_by_split"
+  bq_run_eval_metrics_table: "ingka-cn-cop-stage.ikea_da_test.refresh_model_run_eval_metrics"
+
+# ── 业务运行参数 ──────────────────────────────────────────────────────────────
+runtime:
+  label_column: item_qty_weekly
+  time_column: week_no
+  min_train_rows: 95
+
+  sample_key_columns:
+    - sales_channel
+    - market_area_no_orig
+    - hfb_code
+    - product_cluster
+    - week_no
+
+  entity_id_columns:
+    - sales_channel
+    - hfb_code
+    - product_cluster
+
+  entity_discovery:
+    enabled: true
+
+  time_windows:
+    train_start: "202401"
+    train_end: "202552"
+    test_start: "202601"
+    test_end: "202617"
+
+  in_sample_validation:
+    enabled: true
+    validation_ratio: 0.2
+    split_mode: random
+    random_seed: 42
+
+  tuning:
+    enabled: true
+    method: random
+    n_iter: 60                     # ← 比 bll 版多 10 次探索
+    random_seed: 2025              # ← 不同随机种子，与 bll 版结果略有差异
+    internal_validation_ratio: 0.2
+    internal_split_mode: random
+    objective:
+      primary: mae_min
+      secondary: accuracy_strict_nonzero_max
+      mae_tie_tolerance: 1.0e-9
+    search_space:
+      n_estimators: [100, 200, 300, 500]           # ← 新增，探索树的棵数
+      num_leaves: [50, 80, 120, 150, 200]          # ← 上限从 150 扩至 200（去掉 31，更关注复杂结构）
+      max_depth: [5, 7, 10, 15, -1]
+      learning_rate: [0.01, 0.02, 0.05, 0.1, 0.15]
+      min_child_samples: [8, 12, 20, 32, 50]
+      feature_fraction: [0.6, 0.7, 0.8, 0.9, 1.0]
+      bagging_fraction: [0.6, 0.7, 0.8, 0.9, 1.0]
+      lambda_l1: [0, 0.1, 1, 5, 10]
+      lambda_l2: [0, 0.1, 1, 5, 10]
+
+  evaluation:
+    requested_dimensions: []
+    include_total: true
+    include_entity: true
+    split_name_map:
+      train: train
+      validation: validation
+      test: test
+
+  # ────────────────────────────────────────────────────────────────────────
+  # 特征列表：与 bll 版本一致（132 个特征，实际可用 99 个）
+  # ────────────────────────────────────────────────────────────────────────
+  features:
+    - pa_code
+    - top_flag
+    - tail_flag
+    - lag1_outof_stock
+    - lag2_outof_stock
+    - lag3_outof_stock
+    - lag4_outof_stock
+    - in_stock_ratio
+    - price_off_condition_utg
+    - price_off_condition_1
+    - price_off_condition_1_plus
+    - ratio_delivery_coupon_flag
+    - ratio_price_off_flag
+    - ratio_order_discount_flag
+    - ratio_utg_flag
+    - ratio_delivery_coupon_condition_1
+    - ratio_delivery_coupon_condition_100
+    - ratio_delivery_coupon_condition_300
+    - ratio_delivery_coupon_condition_500
+    - ratio_delivery_coupon_condition_1000
+    - ratio_delivery_coupon_condition_1000_plus
+    - ratio_order_discount_condition_1
+    - ratio_order_discount_condition_100
+    - ratio_order_discount_condition_300
+    - ratio_order_discount_condition_500
+    - ratio_order_discount_condition_1000
+    - ratio_order_discount_condition_1000_plus
+    - ratio_price_off_condition_utg
+    - ratio_price_off_condition_1
+    - ratio_price_off_condition_1_plus
+    - ratio_non_workday
+    - holiday_importance
+    - spring_stage
+    - summer_stage
+    - autumn_stage
+    - winter_stage
+    - ratio_is_yuandan
+    - ratio_is_spring_festival
+    - ratio_is_qingming
+    - ratio_is_labor_day
+    - ratio_is_dragon_boat
+    - ratio_is_mid_autumn
+    - ratio_is_national_day
+    - camp_week_flag
+    - camp_scin_flag
+    - ratio_is_618
+    - ratio_is_Back_to_School
+    - ratio_is_National_Holiday
+    - ratio_is_D11
+    - ratio_is_CNY
+    - ratio_is_618_range
+    - ratio_is_Back_to_School_range
+    - ratio_is_National_Holiday_range
+    - ratio_is_D11_range
+    - ratio_is_CNY_range
+    - ratio_days_in_campaign
+    - camp_week_aft_flag
+    - camp_week_pre_flag
+    - pre_is_618
+    - aft_is_618
+    - pre_is_d11
+    - aft_is_d11
+    - days_in_campaign_aft
+    - days_in_campaign_pre
+    - ratio_in_campaign_aft
+    - ratio_in_campaign_pre
+    - item_qty_avg_r4
+    - item_qty_max_r4
+    - item_qty_min_r4
+    - qty_ref_avg_r4
+    - qty_ref_max_r4
+    - qty_ref_min_r4
+    - item_qty_avg_r12
+    - item_qty_max_r12
+    - item_qty_min_r12
+    - qty_ref_avg_r12
+    - qty_ref_max_r12
+    - qty_ref_min_r12
+    - std_item_qty_div_r4
+    - std_item_qty_div_r12
+    - std_qty_ref_div_r4
+    - std_qty_ref_div_r12
+    - weekly_sale_incl_tax_price
+    - rolling_13w_min_price
+    - rolling_4w_min_price
+    - discount_rate_this_week
+    - discount_rate_last_week
+    - discount_rate_vs_last_week
+    - discount_rate_next_week
+    - discount_rate_vs_next_week
+    - is_rolling_4w_min_price
+    - is_rolling_13w_min_price
+    - in_scin_flag
+    - scin_is_nlp_flag
+    - baseline_forecast_quantity
+    - extra_ordered_quantity_retail
+    - ratio_scin_extra_over_base
+    - ratio_of_scin_total_days
+    - year
+    - week
+    - item_qty_last1
+    - item_qty_last2
+    - item_qty_last3
+    - item_qty_last4
+    - item_qty_last52
+    - item_qty_up_r1
+    - item_qty_up_r2
+    - item_qty_wa_r4
+    - item_qty_std_r4
+    - item_qty_slope_r4
+    - is_sto_available_isr
+    - is_sto_isr
+    - sto_overlap_ratio
+    - price_log
+    - price_bin
+    - price_elast
+    - price_vs_avg
+    - product_cluster2
+    - delivery_type
+    - is_camp_nlp
+    - is_camp_tla
+    - is_camp_618
+    - is_camp_d11
+    - is_camp_tro
+    - is_camp_collection
+    - is_camp_national_holiday
+    - is_camp_back_to_school
+    - is_camp_spring
+    - is_camp_xmas
+    - is_camp_circular_week
+    - is_camp_cny
+
+# ── 模型超参 ──────────────────────────────────────────────────────────────────
+model:
+  active: lightgbm
+
+  decision_tree:
+    algorithm_name: "DT"
+    version: "v001"
+    max_depth: 6
+    min_samples_split: 24
+    min_samples_leaf: 12
+    max_features: "sqrt"
+    random_state: 42
+    description: "Decision Tree baseline for Store x hfb_code x product_cluster"
+
+  lightgbm:
+    algorithm_name: "LGBM"
+    version: "v001"
+    num_leaves: 31
+    max_depth: 6
+    learning_rate: 0.05
+    n_estimators: 200
+    min_data_in_leaf: 12
+    reg_alpha: 0.1
+    reg_lambda: 0.1
+    feature_fraction: 0.8
+    bagging_fraction: 0.8
+    bagging_freq: 5
+    random_state: 42
+    verbose: -1
+    description: "LightGBM for Store x hfb_code x product_cluster — bq_gcp_bq production run"

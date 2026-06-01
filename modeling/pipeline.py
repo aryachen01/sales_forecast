@@ -24,6 +24,7 @@ from modeling.artifacts import (
     save_model_and_metadata,
     save_predictions_csv,
 )
+from modeling.add_func_trend_chart import save_weekly_trend
 from modeling.batch_reporting import save_entity_eval_partial
 from modeling.evaluation import evaluate_and_save_outputs
 from modeling.preprocess import prepare_train_test_features, split_train_validation
@@ -366,6 +367,16 @@ def train_and_save_predictions(
             pred_all_csv_gcs = pred_artifacts["pred_all_csv_gcs"]
             if pred_all_csv_gcs:
                 uploaded_files.append(pred_all_csv_gcs)
+
+            # [add_func] 周趋势图 & CSV
+            save_weekly_trend(
+                pred_all_df=pred_all_df,
+                item_dir=item_dir,
+                time_column=time_column,
+                model_name=model_name,
+                model_key=runtime.algorithm_name.lower(),
+                run_ts=runtime.run_ts,
+            )
 
             bq_written_rows = 0
             if store_pred_to_bq and bq_pred_table.strip():

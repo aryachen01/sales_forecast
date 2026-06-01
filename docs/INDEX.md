@@ -60,7 +60,7 @@ flowchart TD
 **最简本地调试命令：**
 
 ```powershell
-cd scripts/gcp_python_modeling
+cd sales_forecast
 python main.py --scenario bq_local_local --config config/profiles/item_channel_ma_week/config_v001.yaml --max-entities 3
 ```
 
@@ -83,3 +83,4 @@ python main.py --scenario bq_local_local --config config/profiles/item_channel_m
 | 05 | [05_metrics.md](05_metrics.md) | MAE / RMSE / WAPE / 准确率口径定义与计算公式 |
 | 06 | [06_tuning_method.md](06_tuning_method.md) | 超参搜索框架、目标优先级、搜索空间配置 |
 | 07 | [07_prerequisites.md](07_prerequisites.md) | GCP 权限、本地环境、BigQuery 数据准备 |
+| 08 | [08_skillization_runbook.md](08_skillization_runbook.md) | 销量预测技能化方案、输入模板、一次真实训练记录（refresh_model） |

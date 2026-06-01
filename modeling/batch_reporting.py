@@ -34,14 +34,15 @@ def compute_flags(actual: np.ndarray, pred: np.ndarray) -> Dict[str, np.ndarray 
     hi = np.ceil(actual * 1.2)
     standard = (pred >= lo) & (pred <= hi)
 
-    loose = np.abs(pred - actual) <= 1
+    loose_tol = np.maximum(1.0, np.abs(actual) * 0.2)
+    loose = np.abs(pred - actual) <= loose_tol
     ext = np.where(np.abs(actual) > eps, standard, loose)
 
     return {
-        "accuracy_strict_pct": float(strict.mean() * 100),
-        "accuracy_standard_pct": float(standard.mean() * 100),
-        "accuracy_loose_pct": float(loose.mean() * 100),
-        "accuracy_ext_pct": float(ext.mean() * 100),
+        "accuracy_strict_pct": float(strict.mean()),
+        "accuracy_standard_pct": float(standard.mean()),
+        "accuracy_loose_pct": float(loose.mean()),
+        "accuracy_ext_pct": float(ext.mean()),
         "strict_flag": strict.astype(int),
         "standard_flag": standard.astype(int),
         "loose_flag": loose.astype(int),
@@ -95,6 +96,8 @@ def fmt_metric(col: str, val: float) -> str:
         return "NA"
     if col in {"MAE", "RMSE", "MAPE_pct", "MAPE_nonzero_pct", "MAE_nonzero", "WAPE_pct", "sMAPE_pct"}:
         return f"{val:.2f}"
+    if col.startswith("accuracy_") and col.endswith("_pct"):
+        return f"{val:.4f}"
     if col.endswith("_pct"):
         return f"{val:.2f}%"
     return f"{val:.4f}"
@@ -357,10 +360,10 @@ def generate_same_structure_report(
         out["MAE_nonzero"] = np.where(out["nonzero_cnt"] > eps, out["abs_err_nonzero_sum"] / out["nonzero_cnt"], np.nan)
         out["WAPE_pct"] = np.where(out["abs_actual_sum"] > eps, out["abs_err_sum"] / out["abs_actual_sum"] * 100.0, 0.0)
         out["sMAPE_pct"] = np.where(out["smape_den_sum"] > eps, out["smape_num_sum"] / out["smape_den_sum"] * 100.0, np.nan)
-        out["accuracy_strict_pct"] = np.where(out["row_cnt"] > eps, out["strict_hit_sum"] / out["row_cnt"] * 100.0, np.nan)
-        out["accuracy_standard_pct"] = np.where(out["row_cnt"] > eps, out["standard_hit_sum"] / out["row_cnt"] * 100.0, np.nan)
-        out["accuracy_loose_pct"] = np.where(out["row_cnt"] > eps, out["loose_hit_sum"] / out["row_cnt"] * 100.0, np.nan)
-        out["accuracy_ext_pct"] = np.where(out["row_cnt"] > eps, out["ext_hit_sum"] / out["row_cnt"] * 100.0, np.nan)
+        out["accuracy_strict_pct"] = np.where(out["row_cnt"] > eps, out["strict_hit_sum"] / out["row_cnt"], np.nan)
+        out["accuracy_standard_pct"] = np.where(out["row_cnt"] > eps, out["standard_hit_sum"] / out["row_cnt"], np.nan)
+        out["accuracy_loose_pct"] = np.where(out["row_cnt"] > eps, out["loose_hit_sum"] / out["row_cnt"], np.nan)
+        out["accuracy_ext_pct"] = np.where(out["row_cnt"] > eps, out["ext_hit_sum"] / out["row_cnt"], np.nan)
         return out
 
     metrics_df = _metrics_from_raw(raw_df)
