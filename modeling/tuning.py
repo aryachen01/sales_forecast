@@ -109,6 +109,7 @@ def _evaluate_lightgbm(
     model = LGBMRegressor(**params)
     model.fit(x_train, y_train)
     y_pred = model.predict(x_val)
+    del model  # 立即释放 booster 内存，避免 tuning 循环中残留累积
 
     err = y_pred - y_val
     mae = float(np.mean(np.abs(err)))

@@ -79,7 +79,7 @@ runtime:
   tuning:
     enabled: true
     method: random
-    n_iter: 60                     # ← 比 bll 版多 10 次探索
+    n_iter: 30                     # ← 降低至 30 次，减少内存峰值（原 60）
     random_seed: 2025              # ← 不同随机种子，与 bll 版结果略有差异
     internal_validation_ratio: 0.2
     internal_split_mode: random
@@ -88,7 +88,7 @@ runtime:
       secondary: accuracy_strict_nonzero_max
       mae_tie_tolerance: 1.0e-9
     search_space:
-      n_estimators: [100, 200, 300, 500]           # ← 新增，探索树的棵数
+      n_estimators: [100, 200, 300]              # ← 去掉 500，降低单次 trial 内存峰值
       num_leaves: [50, 80, 120, 150, 200]          # ← 上限从 150 扩至 200（去掉 31，更关注复杂结构）
       max_depth: [5, 7, 10, 15, -1]
       learning_rate: [0.01, 0.02, 0.05, 0.1, 0.15]
