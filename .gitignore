@@ -13,6 +13,7 @@ runs/
 
 # ── 本机运行/分析记录（仅本地保留，不进仓库） ────────
 report_generator_model_compare/
+model_predict_by_weekly/
 
 # ── 凭证与敏感配置（绝不上传 GitHub）────────────────
 .env
