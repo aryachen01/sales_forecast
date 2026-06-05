@@ -399,6 +399,7 @@ def train_and_save_predictions(
                     client=client,
                     table_id=bq_pred_table.strip(),
                     pred_all_df=pred_all_df,
+                    sample_key_columns=sample_key_columns,
                     feature_cols=feature_cols,
                     config_name=config_name,
                     run_id=runtime.run_ts,

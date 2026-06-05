@@ -17,6 +17,7 @@ def append_train_test_predictions_to_bq(
     client: bigquery.Client,
     table_id: str,
     pred_all_df: pd.DataFrame,
+    sample_key_columns: List[str],
     feature_cols: List[str],
     config_name: str,
     run_id: str,
@@ -40,6 +41,13 @@ def append_train_test_predictions_to_bq(
     df_out["config_name"] = config_name
     df_out["gcs_run_uri"] = f"{gcs_output_uri.rstrip('/')}/{run_tag}/"
 
+    # Externalize all runtime sample keys as explicit columns.
+    for col in sample_key_columns:
+        if col not in df_out.columns:
+            df_out[col] = None
+
+    dynamic_sample_cols = [col for col in sample_key_columns if col in df_out.columns]
+
     ordered_cols = [
         "run_id",
         "run_ts",
@@ -49,6 +57,7 @@ def append_train_test_predictions_to_bq(
         "entity_id_json",
         "source_table",
         "sample_key_json",
+        *dynamic_sample_cols,
         "data_split",
         "label_value",
         "pred_value",

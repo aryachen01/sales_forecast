@@ -1,9 +1,8 @@
 from __future__ import annotations
 
-from typing import List, Tuple
+from typing import Dict, List, Tuple
 
-# 预测明细表（train+test）Schema 定义
-PRED_SCHEMA_DEFS: List[Tuple[str, str]] = [
+_PRED_SCHEMA_PREFIX: List[Tuple[str, str]] = [
     ("run_id", "STRING"),
     ("run_ts", "TIMESTAMP"),
     ("model_type", "STRING"),
@@ -12,6 +11,9 @@ PRED_SCHEMA_DEFS: List[Tuple[str, str]] = [
     ("entity_id_json", "STRING"),
     ("source_table", "STRING"),
     ("sample_key_json", "STRING"),
+]
+
+_PRED_SCHEMA_SUFFIX: List[Tuple[str, str]] = [
     ("data_split", "STRING"),
     ("label_value", "FLOAT64"),
     ("pred_value", "FLOAT64"),
@@ -21,6 +23,24 @@ PRED_SCHEMA_DEFS: List[Tuple[str, str]] = [
     ("config_name", "STRING"),
     ("gcs_run_uri", "STRING"),
 ]
+
+_SAMPLE_KEY_TYPE_HINTS: Dict[str, str] = {
+    "week_no": "INT64",
+}
+
+
+def build_pred_schema_defs(sample_key_columns: List[str]) -> List[Tuple[str, str]]:
+    """Build prediction table schema dynamically from sample_key_columns.
+
+    All sample IDs are externalized as explicit columns, with optional type hints.
+    Unrecognized sample keys default to STRING.
+    """
+
+    dynamic_sample_fields: List[Tuple[str, str]] = []
+    for col in sample_key_columns:
+        field_type = _SAMPLE_KEY_TYPE_HINTS.get(col, "STRING")
+        dynamic_sample_fields.append((col, field_type))
+    return [*_PRED_SCHEMA_PREFIX, *dynamic_sample_fields, *_PRED_SCHEMA_SUFFIX]
 
 
 # 模型元数据表 Schema 定义

@@ -57,6 +57,7 @@ runtime:
     - hfb_code
     - product_cluster
     - week_no
+    - basket_id_sk    # added for item-level prediction join
 
   entity_id_columns:
     - sales_channel

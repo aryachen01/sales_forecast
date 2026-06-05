@@ -45,7 +45,7 @@ from common.output_schema_defs import (
     FEAT_IMP_SCHEMA_DEFS,
     METRICS_BY_SPLIT_SCHEMA_DEFS,
     MODEL_META_SCHEMA_DEFS,
-    PRED_SCHEMA_DEFS,
+    build_pred_schema_defs,
     RUN_EVAL_METRICS_SCHEMA_DEFS,
 )
 from modeling.pipeline import PipelineRuntimeContext, train_and_save_predictions
@@ -113,56 +113,56 @@ MODEL_PARAMS = None
 SOURCE_REF = SOURCE_TABLE
 
 
-# BigQuery 输出表注册表。
-# 新增输出表时只需在这里补充 TableSpec，
-# 其余建表/兼容检查/解析逻辑会自动复用。
-TABLE_SPECS: Dict[str, TableSpec] = {
-    "pred": TableSpec(
-        key="pred",
-        label="prediction table",
-        env_name="BQ_PRED_TABLE",
-        schema=build_bq_schema(PRED_SCHEMA_DEFS),
-        partition_expr="TIMESTAMP_TRUNC(run_ts, DAY)",
-        partition_field="run_ts",
-        cluster_fields=["model_name", "data_split", "run_id"],
-    ),
-    "model_meta": TableSpec(
-        key="model_meta",
-        label="model metadata table",
-        env_name="BQ_MODEL_META_TABLE",
-        schema=build_bq_schema(MODEL_META_SCHEMA_DEFS),
-        partition_expr="TIMESTAMP_TRUNC(run_ts, DAY)",
-        partition_field="run_ts",
-        cluster_fields=["model_name", "model_type", "run_id"],
-    ),
-    "feat_imp": TableSpec(
-        key="feat_imp",
-        label="feature importance table",
-        env_name="BQ_FEAT_IMP_TABLE",
-        schema=build_bq_schema(FEAT_IMP_SCHEMA_DEFS),
-        partition_expr="TIMESTAMP_TRUNC(run_ts, DAY)",
-        partition_field="run_ts",
-        cluster_fields=["model_name", "feature", "run_id"],
-    ),
-    "metrics_by_split": TableSpec(
-        key="metrics_by_split",
-        label="entity metrics by split table",
-        env_name="BQ_METRICS_BY_SPLIT_TABLE",
-        schema=build_bq_schema(METRICS_BY_SPLIT_SCHEMA_DEFS),
-        partition_expr="TIMESTAMP_TRUNC(run_ts, DAY)",
-        partition_field="run_ts",
-        cluster_fields=["model_name", "data_split", "run_id"],
-    ),
-    "run_eval_metrics": TableSpec(
-        key="run_eval_metrics",
-        label="run eval metrics table",
-        env_name="BQ_RUN_EVAL_METRICS_TABLE",
-        schema=build_bq_schema(RUN_EVAL_METRICS_SCHEMA_DEFS),
-        partition_expr="TIMESTAMP_TRUNC(run_ts, DAY)",
-        partition_field="run_ts",
-        cluster_fields=["model_type", "level", "run_id"],
-    ),
-}
+def _build_table_specs(sample_key_columns: List[str]) -> Dict[str, TableSpec]:
+    """Build BQ table specs; prediction schema follows runtime sample_key_columns."""
+
+    return {
+        "pred": TableSpec(
+            key="pred",
+            label="prediction table",
+            env_name="BQ_PRED_TABLE",
+            schema=build_bq_schema(build_pred_schema_defs(sample_key_columns)),
+            partition_expr="TIMESTAMP_TRUNC(run_ts, DAY)",
+            partition_field="run_ts",
+            cluster_fields=["model_name", "data_split", "run_id"],
+        ),
+        "model_meta": TableSpec(
+            key="model_meta",
+            label="model metadata table",
+            env_name="BQ_MODEL_META_TABLE",
+            schema=build_bq_schema(MODEL_META_SCHEMA_DEFS),
+            partition_expr="TIMESTAMP_TRUNC(run_ts, DAY)",
+            partition_field="run_ts",
+            cluster_fields=["model_name", "model_type", "run_id"],
+        ),
+        "feat_imp": TableSpec(
+            key="feat_imp",
+            label="feature importance table",
+            env_name="BQ_FEAT_IMP_TABLE",
+            schema=build_bq_schema(FEAT_IMP_SCHEMA_DEFS),
+            partition_expr="TIMESTAMP_TRUNC(run_ts, DAY)",
+            partition_field="run_ts",
+            cluster_fields=["model_name", "feature", "run_id"],
+        ),
+        "metrics_by_split": TableSpec(
+            key="metrics_by_split",
+            label="entity metrics by split table",
+            env_name="BQ_METRICS_BY_SPLIT_TABLE",
+            schema=build_bq_schema(METRICS_BY_SPLIT_SCHEMA_DEFS),
+            partition_expr="TIMESTAMP_TRUNC(run_ts, DAY)",
+            partition_field="run_ts",
+            cluster_fields=["model_name", "data_split", "run_id"],
+        ),
+        "run_eval_metrics": TableSpec(
+            key="run_eval_metrics",
+            label="run eval metrics table",
+            env_name="BQ_RUN_EVAL_METRICS_TABLE",
+            schema=build_bq_schema(RUN_EVAL_METRICS_SCHEMA_DEFS),
+            partition_expr="TIMESTAMP_TRUNC(run_ts, DAY)",
+            partition_field="run_ts",
+            cluster_fields=["model_type", "level", "run_id"],
+        ),
+    }
 
 
 def run_dry_run(*, gcs_output_uri: str) -> None:
@@ -1213,9 +1213,11 @@ def main() -> None:
     if not feature_cols:
         raise RuntimeError("No available features found in source table.")
 
+    table_specs = _build_table_specs(sample_key_columns)
+
     resolved_tables: Dict[str, str] = {"pred": "", "model_meta": "", "feat_imp": "", "metrics_by_split": "", "run_eval_metrics": ""}
     # 仅对启用 BQ 写入的目标表执行解析，避免无权限场景触发无意义的 BQ API 调用。
-    for key, spec in TABLE_SPECS.items():
+    for key, spec in table_specs.items():
         requested = requested_tables.get(key, "")
         if not requested.strip():
             continue
