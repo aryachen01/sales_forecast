@@ -29,7 +29,7 @@ strict: 预测值在 $[0.8y, 1.2y]$ 范围内。
 standard: 预测值在 $[0.8y, 1.2y]$ 范围内（零销量场景会按脚本定义处理）。
 
 3. `accuracy_loose_pct`
-loose: 预测值在 $[y-1, y+1]$ 范围内。
+loose: 预测值在 $[y-1, y+1]$ 范围内或者 预测值在 $[0.8y, 1.2y]$ 范围内。
 
 4. `accuracy_ext_pct`
 ext: standard 与 loose 的组合口径。
